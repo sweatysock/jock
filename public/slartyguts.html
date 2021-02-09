@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset='utf-8'>
+	<title>Audence guts</title>
+	<script type="text/javascript" src="./js/jquery-2.1.3.min.js"></script>
+	<script type="text/javascript" src="./js/socket.io.js"></script>
+	<script type="text/javascript" src="./js/slartyguts.js"></script>
+
+	<link rel="stylesheet" href="./css/main.css">
+	<style>
+		.square {
+ 			height: 90%;
+			position: absolute;
+			width: 15vmin;
+		}
+		div {
+			  -webkit-user-elec: noe;/* Safari */
+			    -ms-user-select: none; /* IE 10+ and Edge */
+			      user-select: none; /* Standard syntax */
+		}
+	</style>
+</head>
+
+<body style="background-color:#000000; font-family: Impact, Charcoal, sans-serif;font-size: 4vmin;">
+	<div id="main" style="position:fixed; top:2%; left:1%; width:98%; height:96%; background-color: #333333">
+		<div id="bigPicture" style="position:relative; top:7%; left:5%; width:90%; height:80%; ">
+			<img id="system" style="position:absolute; width:80%; bottom:19%; right:10%; height:80%; " src="images/system.png">
+			<div id="upServer" style="text-align: center;color: #FFC000;position:absolute; top:-4%; left:56%;transform: translate(-50%, -50%)">upstream server</div>
+			<div id="idle" style="text-align: center;color: #FFC000;position:absolute; top:7%; left:85%;transform: translate(-50%, -50%)">idle</div>
+			<div id="upstream" style="text-align: center;color: #333333;position:absolute; top:20%; left:55%;transform: translate(-50%, -50%)">upstream</div>
+			<div id="downstream" style="text-align: center;color: #333333;position:absolute; top:65%; left:30%;transform: translate(-50%, -50%)">downstream</div>
+			<div id="genMix" style="text-align: center;color: #333333;position:absolute; top:57%; left:55%;transform: translate(-50%, -50%)">genMix</div>
+			<div id="clients" style="text-align: center;color: #FFC000;position:absolute; top:76%; left:55%;transform: translate(-50%, -50%)">clients</div>
+			<div id="inC" style="text-align: center;color: #FFC000;position:absolute; top:67%; left:55%;transform: translate(-50%, -50%)">in</div>
+			<div id="out" style="text-align: center;color: #FFC000;position:absolute; top:37%; left:39%;transform: translate(-50%, -50%)">out</div>
+			<div id="overflows" style="text-align: center;color: #FFC000;position:absolute; top:60%; left:91%;">overflows</div>
+			<div id="shortages" style="text-align: center;color: #FFC000;position:absolute; top:69%; left:91%;">shortages</div>
+			<div id="forcedMixes" style="text-align: center;color: #FFC000;position:absolute; top:46%; left:75%;">forced</div>
+			<div id="cbs" style="text-align: center;color: #FFC000;position:absolute; top:80%; left:10%; width:90%; word-wrap: break-word; font-size: 4vmin;">cbs</div>
+			<div id="cic" style="text-align: center;color: #FFC000;position:absolute; top:86%; left:10%; width:90%; word-wrap: break-word; font-size: 4vmin;">cic</div>
+			<div id="pacClass" style="text-align: center;color: #FFC000;position:absolute; top:43%; left:55%;transform: translate(-50%, -50%)">pacClass</div>
+			<div id="upOut" style="text-align: center;color: #FFC000;position:absolute; top:7%; left:31%;transform: translate(-50%, -50%)">upOut</div>
+			<div id="upIn" style="text-align: center;color: #FFC000;position:absolute; top:11%; left:61%;">upIn</div>
+			<div id="perf" style="text-align: center;color: #FFC000;position:absolute; top:5%; left:11%;transform: translate(-50%, -50%)">perf</div>
+			<div id="perfQ" style="text-align: center;color: #FFC000;position:absolute; top:10%; left:11%;transform: translate(-50%, -50%)">perfQ</div>
+			<div id="perfIn" style="text-align: center;color: #FFC000;position:absolute; top:15%; left:11%;transform: translate(-50%, -50%)">perfIn</div>
+			<div id="perfStr" style="text-align: center;color: #FFC000;position:absolute; top:20%; left:11%;transform: translate(-50%, -50%)">perfStr</div>
+			<div id="perfShort" style="text-align: center;color: #FFC000;position:absolute; top:25%; left:11%;transform: translate(-50%, -50%)">perfShort</div>
+		</div>
+		<div id="commandZone" style="position:relative; bottom:0%; margin: auto; width:100vmin; height:16vmin;">
+			<div class="square" id="micMuted" style="bottom:0%; left:0%;">
+				<img id="muteBtn" style="cursor:pointer;position:absolute; bottom:5%; right:0%; width:90%; height:90%;object-fit: scale-down;" src="images/micOpen.png"> 
+				<img id="micOpenBtn" style="visibility: hidden;cursor:pointer;position:absolute; bottom:5%; right:0%; width:90%; height:90%;object-fit: scale-down;" src="images/micMuted.png"> 
+			</div>
+			<div class="square" id="gateDelay" style="bottom:0%; left:16%;background-color: #FFC000">
+				<div style="position:absolute; width:100%; top:0%; right:0%;color: #333333;">gate delay</div>
+				<div id="gateDelayEntry" contenteditable="true"; style="position:absolute; bottom:0%;width:100%; color: #333333;"></div>
+			</div>
+			<div class="square" id="venueSize" style="bottom:0%; left:32%;background-color: #FFC000">
+				<div style="position:absolute; width:100%; top:0%; right:0%;color: #333333;">venue size</div>
+				<div id="venueSizeEntry" contenteditable="true"; style="position:absolute; bottom:0%;width:100%; color: #333333;"></div>
+			</div>
+			<div class="square" id="performer" style="bottom:0%; left:48%;background-color: #FFC000">
+				<div style="position:absolute; width:100%; top:0%; right:0%;color: #333333;">live channel</div>
+				<div id="perfEntry" contenteditable="true"; style="position:absolute; bottom:0%;width:100%; color: #333333;"></div>
+			</div>
+			<div class="square" id="perfLevel" style="bottom:0%; left:64%;background-color: #FFC000">
+				<div style="position:absolute; width:100%; top:0%; right:0%;color: #333333;">performer level</div>
+				<div id="perfLevelEntry" contenteditable="true"; style="position:absolute; bottom:0%;width:100%; color: #333333;"></div>
+			</div>
+			<div class="square" id="noiseThreshold" style="bottom:0%; left:80%;background-color: #FFC000">
+				<div style="position:absolute; width:100%; top:0%; right:0%;color: #333333;">noise threshold</div>
+				<div id="noiseThresholdEntry" contenteditable="true"; style="position:absolute; bottom:0%;width:100%; color: #333333;"></div>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>
+

@@ -11,5 +11,11 @@
     "url": "voicevault"
   },
   "author": "Mark Gemmell",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "request": "^2.88.2",
+    "socket.io": "^3.1.1",
+    "zipson": "^0.2.12"
+  }
 }
