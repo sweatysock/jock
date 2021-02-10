@@ -2,7 +2,7 @@
   "name": "voicevault",
   "version": "1.0.0",
   "description": "Secure voice capture, store and analysis for voice specialists",
-  "main": "index.js",
+  "main": "public/index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
