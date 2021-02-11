@@ -373,7 +373,7 @@ function everySecond() {
 	if ((packetsIn < lowerLimit) || (packetsIn > upperLimit)) downStatus = "Orange";
 	if (packetsIn < lowerLimit/3) downStatus = "Red";
 	setStatusLED("DownStatus",downStatus);
-	trace("In=",packetsIn," Out=", packetsOut,"Ov=", overflows," Sh=", shortages);
+	trace("In=",packetsIn," Out=", packetsOut," Ov=", overflows," Sh=", shortages);
 	packetsIn = 0;
 	packetsOut = 0;
 	overflows = 0;
