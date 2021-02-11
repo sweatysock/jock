@@ -174,7 +174,7 @@ function processAudio(e) {						// Main processing loop
 	}
 
 	// 2. Take audio buffered from server and send it to the speaker
-	let outAudio = [];
+	let outAudio = new Array(ChunkSize).fill(0);
 	if ((!smoothingNeeded)||(spkrBuffer.length > maxBuffSize/2)) {	// If no current shortages or buffer now full enough to restart
 		if (spkrBuffer.length > ChunkSize) {			// There is enough audio buffered
 			outAudio = spkrBuffer.splice(0,ChunkSize);	// Get same amount of audio as came in
@@ -186,7 +186,6 @@ function processAudio(e) {						// Main processing loop
 			}
 		} else {						// Not enough audio.
 			shortages++;					// Log shortage
-			let shortfall = ChunkSize-spkrBuffer.length;
 			let rem = [];
 			rem = spkrBuffer.splice(0,spkrBuffer.length);	// Take all audio that remains and fade down
 			let t = (rem.length < 400)? 			// Transition to zero is as long as remaining audio
@@ -195,15 +194,11 @@ function processAudio(e) {						// Main processing loop
 				outAudio[i] = rem[i]*smooth[Math.round(i*400/t)];
 			}
 			smoothingNeeded = true;
-			let zeros = new Array(shortfall).fill(0);	// Fill shortfall in audio with silence
-			outAudio.push(...zeros);
 		}
 	} else shortages++;						// Not enough audio so add to shortages
-	if (outAudio.length > 0) {					// If there is audio to output
-		for (let i in outData) { 
-			outData[i] = outAudio[i];			// Copy audio to output 
-		}
-	} else trace("NO AUDIO");
+	for (let i in outData) { 
+		outData[i] = outAudio[i];			// Copy audio to output 
+	}
 }
 
 
