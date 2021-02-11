@@ -4,7 +4,7 @@
 //
 
 const SampleRate = 32000; 						// All audio runs at this sample rate regardless of the client hardware
-const PacketSize = 500;							// Number of samples in the client audio packets
+const PacketSize = 1000;							// Number of samples in the client audio packets
 var zipson = require('zipson');						// For compressing and decompressing data
 
 // Network code
@@ -68,7 +68,6 @@ io.sockets.on('connection', function (socket) {
 			console.log("Bad client packet");
 			return;
 		}
-console.log("Packet");
 		socket.emit('d', {					// Send audio back to client
 			audio		: packet.audio,			
 		});

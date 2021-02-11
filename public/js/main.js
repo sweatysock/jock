@@ -4,7 +4,7 @@
 //
 
 const SampleRate = 32000; 						// Global sample rate used for all audio
-const PacketSize = 500;							// Server packet size we must conform to
+const PacketSize = 1000;						// Server packet size we must conform to
 const HighFilterFreq = SampleRate/2.2;					// Mic filter to remove high frequencies before resampling
 const LowFilterFreq = 30;						// Mic filter to remove low frequencies before resampling
 const ChunkSize = 4096;							// Audio chunk size. Fixed by js script processor
