@@ -2,20 +2,21 @@
   "name": "voicevault",
   "version": "1.0.0",
   "description": "Secure voice capture, store and analysis for voice specialists",
-  "main": "public/index.html",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
-    "url": "voicevault"
+    "url": "git+https://github.com/sweatysock/jock.git"
   },
   "author": "Mark Gemmell",
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
     "request": "^2.88.2",
-    "socket.io": "^3.1.1",
+    "socket.io": "^2.3.0",
     "zipson": "^0.2.12"
   }
 }
