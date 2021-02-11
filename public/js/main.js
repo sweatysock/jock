@@ -159,7 +159,6 @@ function processAudio(e) {						// Main processing loop
 			let audio = micBuffer.splice(0, micPacketSize);	// Get a packet of audio
 			let peak = 0;					// Note: no need for perf to set peak
 			audio = reSample(audio, downCache, PacketSize);	
-trace("sending audio with peak ",maxValue(audio));
 			let obj = applyAutoGain(audio, micIn);		// Amplify mic with auto limiter
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
@@ -175,11 +174,10 @@ trace("sending audio with peak ",maxValue(audio));
 	}
 
 	// 2. Take audio buffered from server and send it to the speaker
-	let outAudio = new Array(ChunkSize).fill(0); 
+	let outAudio = [];
 	if ((!smoothingNeeded)||(spkrBuffer.length > maxBuffSize/2)) {	// If no current shortages or buffer now full enough to restart
 		if (spkrBuffer.length > ChunkSize) {			// There is enough audio buffered
 			outAudio = spkrBuffer.splice(0,ChunkSize);	// Get same amount of audio as came in
-trace("got chunk with peak ",maxValue(outAudio));
 			if (smoothingNeeded) {				// We had a shortage so now we need to smooth audio re-entry 
 				for (let i=0; i<400; i++) {		// Smoothly ramp up from zero to one
 					outAudio[i] = outAudio[i]*(1-smooth[i]);
@@ -188,19 +186,23 @@ trace("got chunk with peak ",maxValue(outAudio));
 			}
 		} else {						// Not enough audio.
 			shortages++;
+			let shortfall = ChunkSize-spkrBuffer.length;
 			let rem = [];
-			rem = spkrBuffer.splice(0,spkrBuffer.length);	// Take all that remains and complete with 0s
-			let t = (rem.length < 400)?	 		// Transition to zero is as long as remaining audio
+			rem = spkrBuffer.splice(0,spkrBuffer.length);	// Take all audio that remains and fade down
+			let t = (rem.length < 400)? 			// Transition to zero is as long as remaining audio
 				rem.length : 400;			// up to a maximum of 400 samples
 			for (let i=0; i<t; i++) {			// Smoothly drop to zero to reduce harsh clicks
 				outAudio[i] = rem[i]*smooth[Math.round(i*400/t)];
 			}
 			smoothingNeeded = true;
+			let zeros = new Array(shortfall).fill(0);	// Fill shortfall in audio with silence
+			outAudio.push(...zeros);
 		}
-	} else shortages++;						// We are short of audio data still
-	for (let i in outData) { 
-		outData[i] = outAudio[i];				// Copy audio to output 
 	}
+	if (outAudio.length > 0)					// If there is audio to output
+		for (let i in outData) { 
+			outData[i] = outAudio[i];			// Copy audio to output 
+		}
 }
 
 
