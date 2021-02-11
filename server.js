@@ -42,7 +42,7 @@ if (PORT == undefined) {						// Not running on heroku so use SSL
 
 const request = require('request');					// Used to access cloud storage RestAPI 
 
-// Downstream client socket event and audio handling area
+// Client socket event and audio handling area
 //
 var io  = require('socket.io').listen(server, 
 	{ cookie: false, log: false });					// socketIO for downstream connections
@@ -56,6 +56,7 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('upstreamHi', function (data) { 			// A client requests to connect with an ID
 		console.log("New client ", socket.id," with dir ",data.id);
+		socket.client_id = data.id;
 	});
 
 	socket.on('superHi', function (data) {				// A supervisor is registering for status updates PROTECT
@@ -71,6 +72,7 @@ io.sockets.on('connection', function (socket) {
 		socket.emit('d', {					// Send audio back to client
 			audio		: packet.audio,			
 		});
+console.log("audio from client with id ",socket.client_id);
 	});
 });
 

@@ -174,7 +174,7 @@ function processAudio(e) {						// Main processing loop
 	}
 
 	// 2. Take audio buffered from server and send it to the speaker
-	let outAudio = new Array(ChunkSize).fill(0);
+	let outAudio = new Array(ChunkSize).fill(0);			// Start with silence
 	if ((!smoothingNeeded)||(spkrBuffer.length > maxBuffSize/2)) {	// If no current shortages or buffer now full enough to restart
 		if (spkrBuffer.length > ChunkSize) {			// There is enough audio buffered
 			outAudio = spkrBuffer.splice(0,ChunkSize);	// Get same amount of audio as came in
@@ -193,11 +193,11 @@ function processAudio(e) {						// Main processing loop
 			for (let i=0; i<t; i++) {			// Smoothly drop to zero to reduce harsh clicks
 				outAudio[i] = rem[i]*smooth[Math.round(i*400/t)];
 			}
-			smoothingNeeded = true;
+			smoothingNeeded = true;				// Flag that a smooth fade up will be needed when audio returns
 		}
 	} else shortages++;						// Not enough audio so add to shortages
 	for (let i in outData) { 
-		outData[i] = outAudio[i];			// Copy audio to output 
+		outData[i] = outAudio[i];				// Copy audio to output 
 	}
 }
 
