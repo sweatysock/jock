@@ -154,7 +154,7 @@ function processAudio(e) {						// Main processing loop
 
 	// 1. Get Mic audio, buffer it, and send it to server if enough buffered
 	if (socketConnected) {						// Need connection to send
-		micBuffer.push(...micAudio);				// Buffer mic audio
+		micBuffer.push(...inData);				// Buffer mic audio
 		while (micBuffer.length > micPacketSize) {		// While enough audio in buffer 
 			let audio = micBuffer.splice(0, micPacketSize);	// Get a packet of audio
 			let peak = 0;					// Note: no need for perf to set peak
@@ -358,7 +358,7 @@ var packetsOut = 0;
 var overflows = 0;
 var shortages = 0;
 function everySecond() {
-	let netState = ((((rtt1-rtt5)/rtt5)>0.1) && (rtt5>400)) ? "UNSTABLE":"stable";
+	let netState = "stable";
 	let generalStatus = "Green";
 	if ((overflows > 1) || (shortages >1) || (netState != "stable")) generalStatus = "Orange";
 	if (socketConnected == false) generalStatus = "Red";
