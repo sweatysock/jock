@@ -185,7 +185,7 @@ function processAudio(e) {						// Main processing loop
 				smoothingNeeded = false;
 			}
 		} else {						// Not enough audio.
-			shortages++;
+			shortages++;					// Log shortage
 			let shortfall = ChunkSize-spkrBuffer.length;
 			let rem = [];
 			rem = spkrBuffer.splice(0,spkrBuffer.length);	// Take all audio that remains and fade down
@@ -198,7 +198,7 @@ function processAudio(e) {						// Main processing loop
 			let zeros = new Array(shortfall).fill(0);	// Fill shortfall in audio with silence
 			outAudio.push(...zeros);
 		}
-	}
+	} else shortages++;						// Not enough audio so add to shortages
 	if (outAudio.length > 0)					// If there is audio to output
 		for (let i in outData) { 
 			outData[i] = outAudio[i];			// Copy audio to output 
