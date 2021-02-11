@@ -159,6 +159,7 @@ function processAudio(e) {						// Main processing loop
 			let audio = micBuffer.splice(0, micPacketSize);	// Get a packet of audio
 			let peak = 0;					// Note: no need for perf to set peak
 			audio = reSample(audio, downCache, PacketSize);	
+trace("sending audio with peak ",maxValue(audio));
 			let obj = applyAutoGain(audio, micIn);		// Amplify mic with auto limiter
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
@@ -178,6 +179,7 @@ function processAudio(e) {						// Main processing loop
 	if ((!smoothingNeeded)||(spkrBuffer.length > maxBuffSize/2)) {	// If no current shortages or buffer now full enough to restart
 		if (spkrBuffer.length > ChunkSize) {			// There is enough audio buffered
 			outAudio = spkrBuffer.splice(0,ChunkSize);	// Get same amount of audio as came in
+trace("got chunk with peak ",maxValue(outAudio));
 			if (smoothingNeeded) {				// We had a shortage so now we need to smooth audio re-entry 
 				for (let i=0; i<400; i++) {		// Smoothly ramp up from zero to one
 					outAudio[i] = outAudio[i]*(1-smooth[i]);
