@@ -68,6 +68,7 @@ io.sockets.on('connection', function (socket) {
 			console.log("Bad client packet");
 			return;
 		}
+console.log("Packet");
 		socket.emit('d', {					// Send audio back to client
 			audio		: packet.audio,			
 		});
