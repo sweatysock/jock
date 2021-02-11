@@ -178,6 +178,7 @@ function processAudio(e) {						// Main processing loop
 	if ((!smoothingNeeded)||(spkrBuffer.length > maxBuffSize/2)) {	// If no current shortages or buffer now full enough to restart
 		if (spkrBuffer.length > ChunkSize) {			// There is enough audio buffered
 			outAudio = spkrBuffer.splice(0,ChunkSize);	// Get same amount of audio as came in
+trace("got audio");
 			if (smoothingNeeded) {				// We had a shortage so now we need to smooth audio re-entry 
 				for (let i=0; i<400; i++) {		// Smoothly ramp up from zero to one
 					outAudio[i] = outAudio[i]*(1-smooth[i]);
@@ -199,10 +200,12 @@ function processAudio(e) {						// Main processing loop
 			outAudio.push(...zeros);
 		}
 	} else shortages++;						// Not enough audio so add to shortages
-	if (outAudio.length > 0)					// If there is audio to output
+	if (outAudio.length > 0) {					// If there is audio to output
+trace("outAudio peak is ",maxValue(outAudio));
 		for (let i in outData) { 
 			outData[i] = outAudio[i];			// Copy audio to output 
 		}
+	}
 }
 
 
