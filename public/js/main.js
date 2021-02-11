@@ -186,11 +186,12 @@ function processAudio(e) {						// Main processing loop
 			}
 		} else {						// Not enough audio.
 			shortages++;
-			outAudio = spkrBuffer.splice(0,spkrBuffer.length);// Take all that remains and complete with 0s
-			let t = (spkrBuffer.length < 400)? 		// Transition to zero is as long as remaining audio
-				spkrBuffer.length : 400;		// up to a maximum of 400 samples
+			let rem = [];
+			rem = spkrBuffer.splice(0,spkrBuffer.length);	// Take all that remains and complete with 0s
+			let t = (rem.length < 400)?	 		// Transition to zero is as long as remaining audio
+				rem.length : 400;			// up to a maximum of 400 samples
 			for (let i=0; i<t; i++) {			// Smoothly drop to zero to reduce harsh clicks
-				outAudio[i] = outAudio[i]*smooth[Math.round(i*400/t)];
+				outAudio[i] = rem[i]*smooth[Math.round(i*400/t)];
 			}
 			smoothingNeeded = true;
 		}
@@ -327,11 +328,6 @@ document.addEventListener('DOMContentLoaded', function(event){
 			mon.style.visibility = "visible";
 			mon.parentNode.style.visibility = "visible";
 		}
-	};
-	let settingsBtn=document.getElementById('settingsBtn');
-	settingsBtn.onclick = function () {
-		trace2("Settings Button Pressed");
-		toggleSettings();
 	};
 	// Buttons used for testing...
 	let testBtn=document.getElementById('testBtn');
