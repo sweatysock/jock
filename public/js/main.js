@@ -185,7 +185,7 @@ function processAudio(e) {						// Main processing loop
 				smoothingNeeded = false;
 			}
 		} else {						// Not enough audio.
-			shorages++;
+			shortages++;
 			outAudio = spkrBuffer.splice(0,spkrBuffer.length);// Take all that remains and complete with 0s
 			let t = (spkrBuffer.length < 400)? 		// Transition to zero is as long as remaining audio
 				spkrBuffer.length : 400;		// up to a maximum of 400 samples
@@ -194,7 +194,7 @@ function processAudio(e) {						// Main processing loop
 			}
 			smoothingNeeded = true;
 		}
-	}
+	} else shortages++;						// We are short of audio data still
 	for (let i in outData) { 
 		outData[i] = outAudio[i];				// Copy audio to output 
 	}
