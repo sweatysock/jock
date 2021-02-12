@@ -72,7 +72,6 @@ io.sockets.on('connection', function (socket) {
 		socket.emit('d', {					// Send audio back to client
 			audio		: packet.audio,			
 		});
-console.log("audio from client with id ",socket.client_id);
 	});
 });
 

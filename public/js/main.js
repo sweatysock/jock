@@ -18,16 +18,19 @@ var maxBuffSize = 20000;						// Max audio buffer chunks for playback.
 var micBuffer = [];							// Buffer mic audio before sending
 var myDir = "";								// Name assigned to my audio channel
 var micIn = {								// and for microphone input
-	gain	: 0,
-	gainRate: 100,
-	targetGain: 1,
-	ceiling : 1,
-	agc	: true,
-	peak	: 0,
+	gain	: 0,							// Gain level for mic
+	gainRate: 100,							// Speed of gain adjustment
+	targetGain: 1,							// Final target gain for mic
+	ceiling : 1,							// Temporary gain level for special audio control
+	agc	: true,							// Control if mic is to have gain auto controlled
+	peak	: 0,							// Peak mic level
+	muted	: false,						// Mute control for mic
 };
 var smooth = [];							// Pre-populated array of values for smooth overflow/shortage transations
 for (let i=0; i<400; i++)
 	smooth[i] = Math.cos(i/400*Math.PI)/2 + 0.5;
+var monitor = false;							// Flag to switch audio output on/off
+outPeak = 0;								// peak output used for display
 
 
 // Network code
@@ -157,12 +160,13 @@ function processAudio(e) {						// Main processing loop
 		micBuffer.push(...inData);				// Buffer mic audio
 		while (micBuffer.length > micPacketSize) {		// While enough audio in buffer 
 			let audio = micBuffer.splice(0, micPacketSize);	// Get a packet of audio
-			let peak = 0;					// Note: no need for perf to set peak
 			audio = reSample(audio, downCache, PacketSize);	
 			let obj = applyAutoGain(audio, micIn);		// Amplify mic with auto limiter
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
 			micIn.gain = obj.finalGain;			// Store gain for next loop
+			if (micIn.muted) 				// If mic muted send silence
+				audio = new Array(micPacketSize).fill(0);
 			let a = zipson.stringify(audio);		// Compress audio
 			audio = a;	
 			let packet = {
@@ -196,8 +200,12 @@ function processAudio(e) {						// Main processing loop
 			smoothingNeeded = true;				// Flag that a smooth fade up will be needed when audio returns
 		}
 	} else shortages++;						// Not enough audio so add to shortages
-	for (let i in outData) { 
-		outData[i] = outAudio[i];				// Copy audio to output 
+	let tempPeak = maxValue(outAudio);				// Capture output peak level for display
+	if (tempPeak > outPeak) outPeak = tempPeak;
+	if (monitor) {							// If the user has switched on output monitoring
+		for (let i in outData)  outData[i] = outAudio[i];	// copy audio to output 
+	} else {
+		for (let i in outData) outData[i] = 0;			// else output is silent
 	}
 }
 
@@ -329,17 +337,15 @@ document.addEventListener('DOMContentLoaded', function(event){
 			mon.parentNode.style.visibility = "visible";
 		}
 	};
-	// Buttons used for testing...
-	let testBtn=document.getElementById('testBtn');
-	testBtn.onclick = function () {
-		trace2("Echo Test Button Pressed");
-		startEchoTest();
+	let micBtn=document.getElementById('micBtn');
+	micBtn.onclick = function () {
+		trace2("Mic mute button pressed");
+		micIn.muted = !micIn.muted;
 	};
-	let actionBtn=document.getElementById('actionBtn');
-	actionBtn.onclick = function () {
-		trace("Pause traces pressed");
-		if (pauseTracing == true) pauseTracing = false;
-		else pauseTracing = true;
+	let outBtn=document.getElementById('outBtn');
+	outBtn.onclick = function () {
+		trace("Output button pressed");
+		monitor = !monitor;
 	};
 });
 var pauseTracing = false;						// Traces are on by default
@@ -351,26 +357,33 @@ var packetsOut = 0;
 var overflows = 0;
 var shortages = 0;
 function everySecond() {
-	let netState = "stable";
-	let generalStatus = "Green";
-	if ((overflows > 1) || (shortages >1) || (netState != "stable")) generalStatus = "Orange";
-	if (socketConnected == false) generalStatus = "Red";
-	setStatusLED("GeneralStatus",generalStatus);
 	let upperLimit = SampleRate/PacketSize * 1.2;
 	let lowerLimit = SampleRate/PacketSize * 0.8;
-	let upStatus = "Green";
-	if ((packetsOut < lowerLimit) || (packetsOut > upperLimit)) upStatus = "Orange";
-	if (packetsOut < lowerLimit/3) upStatus = "Red";
-	setStatusLED("UpStatus",upStatus);
-	let downStatus = "Green";
-	if ((packetsIn < lowerLimit) || (packetsIn > upperLimit)) downStatus = "Orange";
-	if (packetsIn < lowerLimit/3) downStatus = "Red";
-	setStatusLED("DownStatus",downStatus);
+	let generalStatus = "Green";
+	if ((overflows > 1) || (shortages >1) || 
+		(packetsOut < lowerLimit) || 
+		(packetsOut > upperLimit) || 
+		(packetsIn < lowerLimit) || 
+		(packetsIn > upperLimit)) generalStatus = "Orange";
+	if ((socketConnected == false) ||
+		(packetsOut < lowerLimit/3) ||
+		(packetsIn < lowerLimit/3)) generalStatus = "Red";
+	setStatusLED("GeneralStatus",generalStatus);
+	let micStatus = "Green";
+	if (micIn.peak > 0.95) micStatus = "Orange";
+	if (micIn.peak == 0) micStatus = "Red";
+	setStatusLED("micStatus",micStatus);
+	let outStatus = "Green";
+	if (outPeak > 0.95) outStatus = "Orange";
+	if (outPeak == 0) outStatus = "Red";
+	setStatusLED("outStatus",outStatus);
 	trace("In=",packetsIn," Out=", packetsOut," Ov=", overflows," Sh=", shortages);
 	packetsIn = 0;
 	packetsOut = 0;
 	overflows = 0;
 	shortages = 0;
+	micIn.peak = 0;
+	outPeak = 0;
 }
 setInterval(everySecond, 1000);						// Call report generator and slow UI updater once a second
 
