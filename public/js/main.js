@@ -31,7 +31,7 @@ for (let i=0; i<400; i++)
 	smooth[i] = Math.cos(i/400*Math.PI)/2 + 0.5;
 var monitor = false;							// Flag to switch audio output on/off
 var outPeak = 0;							// peak output used for display
-var guideStep = 1;							// Start guide at first step
+var guideStep = 0;							// Start guide at first step
 var guideName = "";							// Guide name is derived from ID
 var guides = [];							// List of guide steps
 
@@ -43,7 +43,6 @@ socketIO.on('connect', function (socket) {				// New connection coming in
 	let urlParams = new URLSearchParams(window.location.search);	
 	myID = urlParams.get('id');					// Get our ID from the URL
 	guideName = myID.substring(0, myID.indexOf("-"));		// Get guide name which is the string up to a "-" in the ID
-trace("Guide is ",guideName);
 	socketIO.emit("upstreamHi",{id:myID});				// Register with server supplying the ID
 	socketConnected = true;						// The socket can be used once we have a channel
 });
@@ -63,10 +62,17 @@ socketIO.on('d', function (data) { 					// Audio data coming in from server
 });
 
 socketIO.on('g', function (data) { 					// List of guide steps to follow
-	guideStep = 1;
+	guideStep = 0;
 	guides = data.files;						// Store the list of guide steps
 	loadGuide();
 });
+
+// Get recording event from server -> set buttons to correct state
+//
+// Get stopped event from server -> set buttons to correct state
+//
+// Get playing event from server -> Set buttons to correct state
+//
 
 socketIO.on('disconnect', function () {
 	trace('socket disconnected!');
@@ -95,18 +101,70 @@ function checkOrientation() {						// Check screen aspect ratio and move guide a
 	}
 	let scaleVal = document.getElementById('scaleVal');
 	scaleVal.style.fontSize = scaleVal.clientHeight/2 + "px";
-	scaleVal.style.lineHeight = scaleVal.clientHeight/2 + "px";
 }
 
 function updateScale(value) {
 	let scaleVal = document.getElementById('scaleVal');
 	scaleVal.innerHTML = value;
+	let nextOff = document.getElementById("nextOff");
+	nextOff.style.visibility = "hidden";				// Enable the next button as a value has been input
 }
 
 document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic behaviour to UI elements
 	tracef("Starting V1.0");
 	checkOrientation();
 	window.addEventListener('resize', checkOrientation );
+	let nextBtn = document.getElementById("nextBtn");
+	let recBtn = document.getElementById("recBtn");
+	let playBtn = document.getElementById("playBtn");
+	let trueBtn = document.getElementById("trueBtn");
+	let exBtn = document.getElementById("exBtn");
+	let stopBtn = document.getElementById("stopBtn");
+	let falseBtn = document.getElementById("falseBtn");
+	let nextOff = document.getElementById("nextOff");
+	let stopOff = document.getElementById("stopOff");
+	let exOff = document.getElementById("exOff");
+	let trueActive = document.getElementById("trueActive");
+	let falseActive = document.getElementById("falseActive");
+	let exAudio = document.getElementById("exAudio");
+	nextBtn.onclick = function () {
+		// Send command to server to save recording or to save scale or boolean value
+		guideStep++;
+		loadGuide();
+	};
+	recBtn.onclick = function () {
+		// Send recording command to server
+nextOff.style.visibility = "hidden";			
+	};
+	playBtn.onclick = function () {
+		// Send play command to server
+	};
+	trueBtn.onclick = function () {
+		trueActive.style.visibility = "visible";
+		falseActive.style.visibility = "hidden";
+		nextOff.style.visibility = "hidden";			// Enable the next button as a value has been input
+	};
+	falseBtn.onclick = function () {
+		trueActive.style.visibility = "hidden";
+		falseActive.style.visibility = "visible";
+		nextOff.style.visibility = "hidden";			// Enable the next button as a value has been input
+	};
+	exAudio.onloadeddata = function () {				// When example audio is loaded enable the button
+		exOff.style.visibility = "hidden";
+	};
+	exAudio.onended = function () {					// When example audio has finished playing
+		stopOff.style.visibility = "visible";
+	};
+	exBtn.onclick = function () {					// Example audio button pressed
+		exAudio.currentTime = 0;				// Reset file to start
+		exAudio.play();						// Play the audio
+		stopOff.style.visibility = "hidden";			// Enable the stop button
+	};
+	stopBtn.onclick = function () {					// Stop button pressed
+		exAudio.pause();					// Stop audio
+		stopOff.style.visibility = "visible";			// Disable stop button
+		// Send stop command to server
+	};
 });
 
 function setStatusLED(name, level) {					// Set the status LED's colour
@@ -117,13 +175,103 @@ function setStatusLED(name, level) {					// Set the status LED's colour
 }
 
 function loadGuide() {							// Loads the next step in the guide
-	let filename = "/images/"+guides[guideStep];
+	let guide = guides[guideStep];
+	let filename = "/guides/"+guide;
 	let guideImage = document.getElementById("guideImage");
+	let guideType = guide[guide.lastIndexOf("-")+1];
+console.log(filename," ",guideType);
 	guideImage.style.visibility = "hidden";
 	guideImage.src = filename;
 	guideImage.onerror = guideComplete;
 	guideImage.onload = function () {
-		this.style.visibility = "visible";
+		this.style.visibility = "visible";			// Guide step image has loaded. Make it visible.
+		let ex = document.getElementById("ex");			// Get all the control elements and their disable elements too
+		let exOff = document.getElementById("exOff");
+		let rec = document.getElementById("rec");
+		let recOff = document.getElementById("recOff");	
+		let play = document.getElementById("play");
+		let playOff = document.getElementById("playOff");
+		let stop = document.getElementById("stop");
+		let stopOff = document.getElementById("stopOff");
+		let trueCtrl = document.getElementById("trueCtrl");
+		let trueActive = document.getElementById("trueActive");
+		let falseCtrl = document.getElementById("falseCtrl");
+		let falseActive = document.getElementById("falseActive");
+		let scale = document.getElementById("scale");
+		let nextOff = document.getElementById("nextOff");
+		switch (guideType) {					// Set initial button states for each guide step type
+			case "A":
+				ex.style.visibility = "visible";
+				exOff.style.visibility = "visible";
+				rec.style.visibility = "visible";
+				recOff.style.visibility = "hidden";
+				play.style.visibility = "visible";
+				playOff.style.visibility = "visible";
+				stop.style.visibility = "visible";
+				stopOff.style.visibility = "visible";
+				trueCtrl.style.visibility = "hidden";
+				trueActive.style.visibility = "hidden";
+				falseCtrl.style.visibility = "hidden";
+				falseActive.style.visibility = "hidden";
+				scale.style.visibility = "hidden";
+				nextOff.style.visibility = "visible";
+				let exAudio = document.getElementById("exAudio");
+				let filename = "/guides/"+guide.substring(0,guide.lastIndexOf("-")+1) + "Ex.m4a";
+console.log("loading example audio ",filename);
+				exAudio.setAttribute("src",filename);
+				break;
+			case "S":
+				ex.style.visibility = "hidden";
+				exOff.style.visibility = "hidden";
+				rec.style.visibility = "hidden";
+				recOff.style.visibility = "hidden";
+				play.style.visibility = "hidden";
+				playOff.style.visibility = "hidden";
+				stop.style.visibility = "hidden";
+				stopOff.style.visibility = "hidden";
+				trueCtrl.style.visibility = "hidden";
+				trueActive.style.visibility = "hidden";
+				falseCtrl.style.visibility = "hidden";
+				falseActive.style.visibility = "hidden";
+				scale.style.visibility = "visible";
+				nextOff.style.visibility = "visible";
+				break;
+			case "B":
+				ex.style.visibility = "hidden";
+				exOff.style.visibility = "hidden";
+				rec.style.visibility = "hidden";
+				recOff.style.visibility = "hidden";
+				play.style.visibility = "hidden";
+				playOff.style.visibility = "hidden";
+				stop.style.visibility = "hidden";
+				stopOff.style.visibility = "hidden";
+				trueCtrl.style.visibility = "visible";
+				trueActive.style.visibility = "hidden";
+				falseCtrl.style.visibility = "visible";
+				falseActive.style.visibility = "hidden";
+				scale.style.visibility = "hidden";
+				nextOff.style.visibility = "visible";
+				break;
+			case "F":
+				ex.style.visibility = "hidden";
+				exOff.style.visibility = "hidden";
+				rec.style.visibility = "hidden";
+				recOff.style.visibility = "hidden";
+				play.style.visibility = "hidden";
+				playOff.style.visibility = "hidden";
+				stop.style.visibility = "hidden";
+				stopOff.style.visibility = "hidden";
+				trueCtrl.style.visibility = "hidden";
+				trueActive.style.visibility = "hidden";
+				falseCtrl.style.visibility = "hidden";
+				falseActive.style.visibility = "hidden";
+				scale.style.visibility = "hidden";
+				let next = document.getElementById("next");
+				next.style.visibility = "hidden";	// Hide the next button as this is the final step
+				break;
+			default:
+console.log("Unknown guide step type");
+		}
 	}
 }
 

@@ -57,6 +57,12 @@ io.sockets.on('connection', function (socket) {
 	socket.on('upstreamHi', function (data) { 			// A client requests to connect with an ID
 		console.log("New client ", socket.id," with dir ",data.id);
 		socket.client_id = data.id;
+		let guide = data.id.substring(0,1);			// Capture the guide this user is requesting
+		fs.readdir("./public/guides/", (err, files) => {	// Read the guides available, filter and send to client
+			let pattern = new RegExp(guide + "-[0-9]*-[FBAS]");
+			files = files.filter(function (str) {return pattern.test(str);});
+			socket.emit('g', {files:files});		// Send a "g"uide message with ordered list of guide steps
+		});
 	});
 
 	socket.on('superHi', function (data) {				// A supervisor is registering for status updates PROTECT

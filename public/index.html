@@ -144,13 +144,14 @@
 <body style="background-color:#000000; font-family: Arial, Charcoal, sans-serif;font-size: 150%;">
 	<div id="main" style="position:fixed; top:1%; left:1%; width:98%; height:98%; background-color: #00000000;color: #ffffff">
 		<div id="guide" style="position:absolute; top:5%; left:5%; width:45%; height:90%;">
-			<img id="guideImage" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down; visibility: visible" src="images/GuideB1A.png">
+			<img id="guideImage" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down; visibility: visible" src="images/welcome.png">
 		</div>
 		<div id="controls" style="position:absolute; bottom:5%; right:5%; width:45%; height:90%; ">
 			<div id="ex" style="position:absolute; top:5%; left:35%; height:30%; width:30%; visibility: hidden">
 				<img id="exImg" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/exActive.png"> 
 				<div id="exBtn" title="play example" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
 				<img id="exOff" title="no example available" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down; visibility: hidden" src="images/exInactive.png"> 
+				<audio id="exAudio"></audio>
 			</div>
 			<div id="rec" style="position:absolute; bottom:35%; left:4%; height:30%; width:30%; visibility: hidden">
 				<img id="recImg" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/recActive.png"> 
@@ -172,13 +173,13 @@
 				<div id="nextBtn" title="save and continue" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
 				<img id="nextOff" title="complete task first" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down; visibility: hidden" src="images/nextInactive.png"> 
 			</div>
-			<div id="true" style="position:absolute; top:5%; left:35%; height:30%; width:30%; visibility: hidden">
-				<img id="true" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/true.png"> 
+			<div id="trueCtrl" style="position:absolute; top:5%; left:35%; height:30%; width:30%; visibility: hidden">
+				<img id="trueImg" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/true.png"> 
 				<img id="trueActive" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down; visibility: hidden" src="images/trueActive.png"> 
 				<div id="trueBtn" title="True" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
 			</div>
-			<div id="false" style="position:absolute; bottom:5%; right:35%; height:30%; width:30%; visibility: hidden">
-				<img id="false" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/false.png"> 
+			<div id="falseCtrl" style="position:absolute; bottom:5%; right:35%; height:30%; width:30%; visibility: hidden">
+				<img id="falseImg" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/false.png"> 
 				<img id="falseActive" title="no recording to play" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down; visibility: hidden" src="images/falseActive.png"> 
 				<div id="falseBtn" title="play recording" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
 			</div>
