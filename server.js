@@ -4,7 +4,7 @@
 //
 
 const SampleRate = 32000; 						// All audio runs at this sample rate regardless of the client hardware
-const PacketSize = 1000;							// Number of samples in the client audio packets
+const PacketSize = 1000;						// Number of samples in the client audio packets
 var zipson = require('zipson');						// For compressing and decompressing data
 
 // Network code
@@ -49,6 +49,10 @@ var io  = require('socket.io').listen(server,
 
 io.sockets.on('connection', function (socket) {
 	console.log("New connection:", socket.id);
+	socket.audiobuf = [];						// Buffer for storing client audio recording
+	socket.playhead = 0;						// PLayback position in audio buffer
+	socket.recording = false;					// Flags to indicate if client is recording
+	socket.playing = false;						// or playing back
 
 	socket.on('disconnect', function () {
 		console.log("User disconnected:", socket.id);
@@ -65,9 +69,26 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 
-	socket.on('superHi', function (data) {				// A supervisor is registering for status updates PROTECT
-		console.log("New super ", socket.id);
-		socket.join('supers');					// Add them to the supervisor group
+	socket.on('Record', function () {				// Command from client to start recording their audio
+		console.log("Record ", socket.client_id);
+		socket.recording = true;
+		socket.playing = false;
+	});
+
+	socket.on('Play', function () {					// Command from client to start playing their recorded audio
+		console.log("Play ", socket.client_id);
+		if (socket.audiobuf.length > 0) {			// If there is audio recorded then start playback
+			socket.recording = false;
+			socket.playing = true;
+			socket.playhead = 0;
+		}
+	});
+
+	socket.on('Stop', function () {					// Command from client to stop playing or recording their audio
+		console.log("Stop ", socket.client_id);
+		socket.recording = false;
+		socket.playing = false;
+		socket.emit('s');					// Send stop confirm to client
 	});
 
 	socket.on('u', function (packet) { 				// Audio coming up of our downstream clients
@@ -75,8 +96,18 @@ io.sockets.on('connection', function (socket) {
 			console.log("Bad client packet");
 			return;
 		}
+		if (socket.recording) 					// If recording add audio to audio packet buffer
+			socket.audiobuf.push(packet.audio);
+		let audio;						// Audio to send back to client
+		if (socket.playing) {					// If playing back recording
+			audio = socket.audiobuf[socket.playhead++];	// reproduce audio from audio packet buffer
+			if (socket.audiobuf.length == socket.playhead) {// If we have reached the end of the recorded audio buffer
+				socket.playing = false;			// stop playing
+				socket.emit('s');			// & send client the event that playing has stopped
+			}
+		} else audio = packet.audio;				// otherwise send client's audio back to them
 		socket.emit('d', {					// Send audio back to client
-			audio		: packet.audio,			
+			audio		: audio,			
 		});
 	});
 });

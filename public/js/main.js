@@ -67,12 +67,10 @@ socketIO.on('g', function (data) { 					// List of guide steps to follow
 	loadGuide();
 });
 
-// Get recording event from server -> set buttons to correct state
-//
-// Get stopped event from server -> set buttons to correct state
-//
-// Get playing event from server -> Set buttons to correct state
-//
+socketIO.on('s', function (data) {					// Playing or recording has stopped
+	stopOff.style.visibility = "visible";				// Disable stop button
+	monitor = false;						// Turn off monitor in case we were paying our recording back
+});
 
 socketIO.on('disconnect', function () {
 	trace('socket disconnected!');
@@ -123,6 +121,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	let falseBtn = document.getElementById("falseBtn");
 	let nextOff = document.getElementById("nextOff");
 	let stopOff = document.getElementById("stopOff");
+	let playOff = document.getElementById("playOff");
 	let exOff = document.getElementById("exOff");
 	let trueActive = document.getElementById("trueActive");
 	let falseActive = document.getElementById("falseActive");
@@ -133,11 +132,18 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		loadGuide();
 	};
 	recBtn.onclick = function () {
-		// Send recording command to server
-nextOff.style.visibility = "hidden";			
+		exAudio.pause();					// Stop example audio playing
+		stopOff.style.visibility = "hidden";			// Enable stop button
+		nextOff.style.visibility = "hidden";			// Enable next button as recording has started
+		playOff.style.visibility = "hidden";			// Enable play button too
+		socketIO.emit("Record");				// Send command to server
+		monitor = false;					// Turn off monitor while recording
 	};
 	playBtn.onclick = function () {
-		// Send play command to server
+		exAudio.pause();					// Stop example audio playing
+		stopOff.style.visibility = "hidden";			// Enable stop button
+		socketIO.emit("Play");					// Send command to server
+		monitor = true;
 	};
 	trueBtn.onclick = function () {
 		trueActive.style.visibility = "visible";
@@ -163,7 +169,7 @@ nextOff.style.visibility = "hidden";
 	stopBtn.onclick = function () {					// Stop button pressed
 		exAudio.pause();					// Stop audio
 		stopOff.style.visibility = "visible";			// Disable stop button
-		// Send stop command to server
+		socketIO.emit("Stop");					// Send command to server
 	};
 });
 
