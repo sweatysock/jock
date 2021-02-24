@@ -3,7 +3,7 @@
 
 <head>
 	<meta charset='utf-8'>
-	<title>Audence</title>
+	<title>VoiceVault</title>
 	<script type="text/javascript" src="./js/socket.io.js"></script>
 	<!--	<script type="text/javascript" src="./js/compressed.js"></script>  -->
 	<script type="text/javascript" src="./js/main.js"></script> 
@@ -64,26 +64,135 @@
 			  -ms-overflow-style: none;  /* IE and Edge *
 							  scrlbar-wdth: none;  /* Firefox */
 		}
+		input[type="range"] { 
+			-webkit-appearance: none;
+			transform: rotate(270deg);
+			overflow: hidden;
+			cursor: pointer;
+			border-radius: 0; /*iOS */
+		}
 
-		.bgimg {
-			background-image: url("http://audence.com/wp-content/uploads/2020/08/people-crowd-concert-691777.jpg");
-			height: 98%;
-			width: 98%;
-			top: 1%;
-			left: 1%;
-			position: fixed;
-			opacity: 0.65;
-			background-position: bottom center;
-			background-repeat: no-repeat;
-			background-size: cover;
+		::-webkit-slider-runnable-track {
+			background: #7f7f7f;
+			width: 10%; 
+			height: 100%;
+		}
+
+		/*
+		    * 1. Set to 0 width and remove border for a slider without a thumb
+		     */
+		::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			width: 20%; 
+			height: 100%;
+			background: #fff;
+			box-shadow: -100vw 0 0 100vw #66FF33;
+			border: 2px solid #999; 
+		}
+
+		::-moz-range-track {
+			background: #7f7f7f;
+			width: 10%; 
+			height: 100%;
+		}
+
+		::-moz-range-thumb {
+			width: 20%; 
+			height: 100%;
+			background: #fff;
+			border: 3px solid #999;
+			border-radius: 0;
+			box-shadow: -100vw 0 0 100vw #66FF33;
+			box-sizing: border-box;
+		}
+
+		::-ms-fill-lower { 
+			background: #66FF33;
+		}
+
+		:-ms-thumb { 
+			background: #fff;
+			border: 2px solid #999;
+			width: 20%; 
+			height: 100%;
+			box-sizing: border-box;
+		}
+
+		::-ms-ticks-after { 
+			display: none; 
+		}
+
+		::-ms-ticks-before { 
+			display: none; 
+		}
+
+		::-ms-track { 
+			background: #7f7f7f;
+			color: transparent;
+			width: 10%; 
+			height: 100%;
+			border:none;
+		}
+
+		::-ms-tooltip { 
+			display: none;
 		}
 	</style>
 </head>
 
 
-<body style="background-color:#000000; font-family: Impact, Charcoal, sans-serif;font-size: 150%;">
-	<div class="bgimg"></div>
-	<div id="main" style="position:fixed; top:0%; left:0%; width:98%; height:96%; background-color: #00000000;color: #ffffff">
+<body style="background-color:#000000; font-family: Arial, Charcoal, sans-serif;font-size: 150%;">
+	<div id="main" style="position:fixed; top:1%; left:1%; width:98%; height:98%; background-color: #00000000;color: #ffffff">
+		<div id="guide" style="position:absolute; top:5%; left:5%; width:45%; height:90%;">
+			<img id="guideImage" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down; visibility: visible" src="images/GuideB1A.png">
+		</div>
+		<div id="controls" style="position:absolute; bottom:5%; right:5%; width:45%; height:90%; ">
+			<div id="ex" style="position:absolute; top:5%; left:35%; height:30%; width:30%; visibility: hidden">
+				<img id="exImg" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/exActive.png"> 
+				<div id="exBtn" title="play example" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
+				<img id="exOff" title="no example available" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down; visibility: hidden" src="images/exInactive.png"> 
+			</div>
+			<div id="rec" style="position:absolute; bottom:35%; left:4%; height:30%; width:30%; visibility: hidden">
+				<img id="recImg" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/recActive.png"> 
+				<div id="recBtn" title="record voice" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
+				<img id="recOff" title="unable to record" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down; visibility: hidden" src="images/recInactive.png"> 
+			</div>
+			<div id="play" style="position:absolute; bottom:5%; right:35%; height:30%; width:30%; visibility: hidden">
+				<img id="playImg" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/playActive.png"> 
+				<div id="playBtn" title="play recording" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
+				<img id="playOff" title="no recording to play" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down; visibility: hidden" src="images/playInactive.png"> 
+			</div>
+			<div id="stop" style="position:absolute; bottom:35%; right:35%; height:30%; width:30%; visibility: hidden">
+				<img id="stopImg" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/stopActive.png"> 
+				<div id="stopBtn" title="stop" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
+				<img id="stopOff" title="nothing to stop" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down; visibility: hidden" src="images/stopInactive.png"> 
+			</div>
+			<div id="next" style="position:absolute; bottom:35%; right:4%; height:30%; width:30%; visibility: visible">
+				<img id="nextImg" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/nextActive.png"> 
+				<div id="nextBtn" title="save and continue" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
+				<img id="nextOff" title="complete task first" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down; visibility: hidden" src="images/nextInactive.png"> 
+			</div>
+			<div id="true" style="position:absolute; top:5%; left:35%; height:30%; width:30%; visibility: hidden">
+				<img id="true" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/true.png"> 
+				<img id="trueActive" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down; visibility: hidden" src="images/trueActive.png"> 
+				<div id="trueBtn" title="True" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
+			</div>
+			<div id="false" style="position:absolute; bottom:5%; right:35%; height:30%; width:30%; visibility: hidden">
+				<img id="false" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/false.png"> 
+				<img id="falseActive" title="no recording to play" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down; visibility: hidden" src="images/falseActive.png"> 
+				<div id="falseBtn" title="play recording" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
+			</div>
+			<div id="scale" style="visibility: hidden">
+				<div id="scaleVal" title="value to be saved" style="position:absolute; bottom:35%; left:4%; width:30%; height:30%; display: flex; justify-content:center; align-items: center;">5</div>
+				<div style="position:absolute; bottom:35%; right:35%; height:30%; width:30%;">
+					<input type="range" title="slide to set value" min="1" max="10" value="5" id="scaleRange" style="position:absolute; bottom:39%; right:0%; width:100%; height:20%" onchange="updateScale(this.value);" />
+				</div>
+			</div>
+		</div>
+		<div id="testComplete" style="position:absolute; top:50%; left:50%; transform: translate(-50%, -50%); text-align:center; font-size: 300%; visibility: hidden">
+			Test complete <br>
+			You may close this window
+		</div>
 		<div style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;visibility: hidden">
 			<div id="monitor" style="position:absolute; bottom:10%; left:7%; width:88%; height:80%; background-color: #00000099; visibility: hidden">
 				<div id="Trace" style="position:absolute; overflow: auto; top:2%; left:2%; width:96%; height:96%; color: #FFFFFF; font-family: Courier New, Courier, monospace;">

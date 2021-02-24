@@ -30,8 +30,10 @@ var smooth = [];							// Pre-populated array of values for smooth overflow/shor
 for (let i=0; i<400; i++)
 	smooth[i] = Math.cos(i/400*Math.PI)/2 + 0.5;
 var monitor = false;							// Flag to switch audio output on/off
-outPeak = 0;								// peak output used for display
-
+var outPeak = 0;							// peak output used for display
+var guideStep = 1;							// Start guide at first step
+var guideName = "";							// Guide name is derived from ID
+var guides = [];							// List of guide steps
 
 // Network code
 //
@@ -40,10 +42,11 @@ socketIO.on('connect', function (socket) {				// New connection coming in
 	trace('socket connected!');
 	let urlParams = new URLSearchParams(window.location.search);	
 	myID = urlParams.get('id');					// Get our ID from the URL
+	guideName = myID.substring(0, myID.indexOf("-"));		// Get guide name which is the string up to a "-" in the ID
+trace("Guide is ",guideName);
 	socketIO.emit("upstreamHi",{id:myID});				// Register with server supplying the ID
 	socketConnected = true;						// The socket can be used once we have a channel
 });
-
 
 socketIO.on('d', function (data) { 					// Audio data coming in from server
 	packetsIn++;
@@ -59,6 +62,12 @@ socketIO.on('d', function (data) { 					// Audio data coming in from server
 	}
 });
 
+socketIO.on('g', function (data) { 					// List of guide steps to follow
+	guideStep = 1;
+	guides = data.files;						// Store the list of guide steps
+	loadGuide();
+});
+
 socketIO.on('disconnect', function () {
 	trace('socket disconnected!');
 	socketConnected = false;
@@ -68,10 +77,36 @@ socketIO.on('disconnect', function () {
 
 
 
-// Media management and display code (audio in and out)
+// Media management and display code 
 //
+function checkOrientation() {						// Check screen aspect ratio and move guide and controls accordingly
+	let guide = document.getElementById('guide');
+	let controls = document.getElementById('controls');
+	if (window.innerWidth > window.innerHeight) {
+		guide.style.width = "45%";
+		controls.style.width = "45%";
+		guide.style.height = "90%";
+		controls.style.height = "90%";
+	} else {
+		guide.style.width = "90%";
+		controls.style.width = "90%";
+		guide.style.height = "45%";
+		controls.style.height = "45%";
+	}
+	let scaleVal = document.getElementById('scaleVal');
+	scaleVal.style.fontSize = scaleVal.clientHeight/2 + "px";
+	scaleVal.style.lineHeight = scaleVal.clientHeight/2 + "px";
+}
+
+function updateScale(value) {
+	let scaleVal = document.getElementById('scaleVal');
+	scaleVal.innerHTML = value;
+}
+
 document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic behaviour to UI elements
 	tracef("Starting V1.0");
+	checkOrientation();
+	window.addEventListener('resize', checkOrientation );
 });
 
 function setStatusLED(name, level) {					// Set the status LED's colour
@@ -81,7 +116,23 @@ function setStatusLED(name, level) {					// Set the status LED's colour
 	else LED.className="greenLED";
 }
 
+function loadGuide() {							// Loads the next step in the guide
+	let filename = "/images/"+guides[guideStep];
+	let guideImage = document.getElementById("guideImage");
+	guideImage.style.visibility = "hidden";
+	guideImage.src = filename;
+	guideImage.onerror = guideComplete;
+	guideImage.onload = function () {
+		this.style.visibility = "visible";
+	}
+}
 
+function guideComplete() {						// If a guide image doesn't load we assume the guide is done
+	let guideImage = document.getElementById("guideImage");
+	guideImage.style.visibility = "hidden";
+	let complete = document.getElementById("testComplete");
+	complete.style.visibility = "visible";
+}
 
 
 // Audio management code
