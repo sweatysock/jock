@@ -54,7 +54,7 @@ app.get("/login", function (req, res, next) {
 	let param = {
 		response_type: "code",
 		client_id: clientID,
-		redirect_uri: domain + "authCallback",
+		redirect_uri: callback,
 		state: "12345",
 		scope: scope,
 	};
@@ -72,7 +72,7 @@ app.get("/login", function (req, res, next) {
 app.get("/authCallback", function (req, res, next) {
 	res.send("OneDrive auth callback");
 	next();
-}
+});
 
 
 // Client socket event and audio handling area
