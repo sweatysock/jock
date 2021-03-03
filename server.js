@@ -38,13 +38,6 @@ if (PORT == undefined) {						// Not running on heroku so use SSL
 	server.listen(PORT, function() {
 		console.log("Server running on ",PORT);
 	});
-
-	var Heroku = require('heroku-client');
-	var heroku = new Heroku({ token: process.env.HEROKU_API_TOKEN });
-	var app = heroku.apps('voicevault');
-	app.domains().list(function (err, domains) {
-	  	console.log("domain: ",domains);
-	});
 }
 
 const request = require('request');					// Used to access cloud storage RestAPI 
@@ -59,7 +52,7 @@ app.get("/login", function (req, res, next) {
 	let param = {
 		response_type: "code",
 		client_id: clientID,
-		redirect_uri: "CALLBACK",
+		redirect_uri: "https://voicevault.herokuapp.com/authCallback",
 		state: "12345",
 		scope: scope,
 	};
