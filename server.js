@@ -38,9 +38,35 @@ if (PORT == undefined) {						// Not running on heroku so use SSL
 	server.listen(PORT, function() {
 		console.log("Server running on ",PORT);
 	});
+
+	var Heroku = require('heroku-client');
+	var heroku = new Heroku({ token: process.env.HEROKU_API_TOKEN });
+	var app = heroku.apps('voicevault');
+	app.domains().list(function (err, domains) {
+	  	console.log("domain: ",domains);
+	});
 }
 
 const request = require('request');					// Used to access cloud storage RestAPI 
+
+// OAuth2 handling for OneDrive
+//
+const clientID = "1cb0b9a5-058b-4224-a31e-7da7f1d82829";
+const clientSecret = "1n3~PGlmw4xMpaz~hhmq12Na._V-Z9SZ97";
+const scope = "offline_access files.readwrite";
+app.get("/login", function (req, res, next) {
+	let url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
+	let param = {
+		response_type: "code",
+		client_id: clientID,
+		redirect_uri: "CALLBACK",
+		state: "12345",
+		scope: scope,
+	};
+	res.send("Please authenticate in OneDrive");
+	next();
+});
+
 
 // Client socket event and audio handling area
 //
@@ -91,6 +117,13 @@ io.sockets.on('connection', function (socket) {
 		socket.emit('s');					// Send stop confirm to client
 	});
 
+	socket.on('Save', function () {					// Command from client to save recorded audio
+		console.log("Save ", socket.client_id);
+		socket.recording = false;
+		socket.playing = false;
+		saveRecording(socket.audiobuf);
+	});
+
 	socket.on('u', function (packet) { 				// Audio coming up of our downstream clients
 		if (clientPacketBad(packet)) {
 			console.log("Bad client packet");
@@ -116,3 +149,41 @@ function clientPacketBad(p) {						// Perform basic checks on packets to stop ba
 	return false;
 }
 
+//var lame = require('lame');
+var wav = require('node-wav');
+//var stream = require('stream');
+function saveRecording(audioBuf) {					// Save recorded audio packets to an MP3 file
+	let audio = [];
+	audioBuf.forEach( function(zippedAudio) {			// Get all audio in packet buffer into a single buffer
+		let a = zipson.parse(zippedAudio);
+		audio.push(...a);
+	});
+	audio = (new Array(3)).fill((audio));
+	let buffer = wav.encode(audio, {sampleRate: 32000, float: true, bitDepth: 64});
+	fs.writeFile("out.wav", buffer, (err) => {
+		if (err)  return console.log(err);
+		console.log("out.wav created");
+	});
+
+//	let encoder = new lame.Encoder({				// Use lame to encode audio as MP3
+//		// input
+//		channels: 1,        
+//		bitDepth: 32, 
+//		sampleRate: 32000, 
+//		// output
+//		bitRate: 128,
+//		outSampleRate: 32000,
+//		mode: lame.MONO 
+//	});
+//	let bufferStream = new stream.PassThrough();			// Pipe to pass audio through to encoder and on to file
+//	bufferStream.end(Buffer.from(audio));				// Audio gets fed into pipe
+//	let fileWriter = new wav.FileWriter('out.wav', {		// Output is a wav file
+//		channels: 1,
+//		sampleRate: 32000,
+//		bitDepth: 32
+//	});
+//	bufferStream.pipe(fileWriter);					// Pipe audio stream to wav file
+//	bufferStream.pipe(encoder);					// and then to the encoder
+//	encoder.pipe(fs.createWriteStream('out.mp3');			// and from there to the output file
+//	bufferStream.pipe(fs.createWriteStream('out.mp3'));
+}

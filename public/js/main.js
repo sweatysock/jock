@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	let falseActive = document.getElementById("falseActive");
 	let exAudio = document.getElementById("exAudio");
 	nextBtn.onclick = function () {
-		// Send command to server to save recording or to save scale or boolean value
+		socketIO.emit("Save");					// Tell server to save the recording
 		guideStep++;
 		loadGuide();
 	};

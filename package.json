@@ -15,8 +15,10 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
+    "node-wav": "^0.0.2",
     "request": "^2.88.2",
     "socket.io": "^2.3.0",
+    "wav": "^1.0.2",
     "zipson": "^0.2.12"
   }
 }
