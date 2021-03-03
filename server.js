@@ -47,18 +47,32 @@ const request = require('request');					// Used to access cloud storage RestAPI
 const clientID = "1cb0b9a5-058b-4224-a31e-7da7f1d82829";
 const clientSecret = "1n3~PGlmw4xMpaz~hhmq12Na._V-Z9SZ97";
 const scope = "offline_access files.readwrite";
+var callback = "https://voicevault.herokuapp.com/authCallback";
+if (PORT == undefined) callback = "https://localhost/authCallback";
 app.get("/login", function (req, res, next) {
 	let url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
 	let param = {
 		response_type: "code",
 		client_id: clientID,
-		redirect_uri: "https://voicevault.herokuapp.com/authCallback",
+		redirect_uri: domain + "authCallback",
 		state: "12345",
 		scope: scope,
 	};
-	res.send("Please authenticate in OneDrive");
+	let params = [];
+	for (var name in param) {
+		params.push(name + "=" + encodeURIComponent(param[name]));
+	}
+	var html = '<input type="button" value="auth" onclick="window.open(\'' + url + "?" +
+	params.join("&") +
+	"', 'Authorization', 'width=500,height=600');\">";
+	res.send("Please authenticate in OneDrive: "+html);
 	next();
 });
+
+app.get("/authCallback", function (req, res, next) {
+	res.send("OneDrive auth callback");
+	next();
+}
 
 
 // Client socket event and audio handling area
