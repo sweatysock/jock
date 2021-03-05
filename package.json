@@ -14,6 +14,7 @@
   "author": "Mark Gemmell",
   "license": "ISC",
   "dependencies": {
+    "async": "^3.2.0",
     "express": "^4.17.1",
     "heroku-client": "^3.1.0",
     "node-wav": "^0.0.2",

@@ -34,6 +34,7 @@ var outPeak = 0;							// peak output used for display
 var guideStep = 0;							// Start guide at first step
 var guideName = "";							// Guide name is derived from ID
 var guides = [];							// List of guide steps
+var responseText = "";
 
 // Network code
 //
@@ -104,6 +105,7 @@ function checkOrientation() {						// Check screen aspect ratio and move guide a
 function updateScale(value) {
 	let scaleVal = document.getElementById('scaleVal');
 	scaleVal.innerHTML = value;
+	responseText = value + " ";					// Store the response for sending to server
 	let nextOff = document.getElementById("nextOff");
 	nextOff.style.visibility = "hidden";				// Enable the next button as a value has been input
 }
@@ -127,7 +129,10 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	let falseActive = document.getElementById("falseActive");
 	let exAudio = document.getElementById("exAudio");
 	nextBtn.onclick = function () {
-		socketIO.emit("Save");					// Tell server to save the recording
+		socketIO.emit("Save", {					// Tell the server to save responses
+			step: guides[guideStep], 			// for this step in the guide
+			text: responseText,				// with response texts if appropriate
+		});	
 		guideStep++;
 		loadGuide();
 	};
@@ -149,11 +154,13 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		trueActive.style.visibility = "visible";
 		falseActive.style.visibility = "hidden";
 		nextOff.style.visibility = "hidden";			// Enable the next button as a value has been input
+		responseText = "true";					// Store the response for sending to server
 	};
 	falseBtn.onclick = function () {
 		trueActive.style.visibility = "hidden";
 		falseActive.style.visibility = "visible";
 		nextOff.style.visibility = "hidden";			// Enable the next button as a value has been input
+		responseText = "false";					// Store the response for sending to server
 	};
 	exAudio.onloadeddata = function () {				// When example audio is loaded enable the button
 		exOff.style.visibility = "hidden";
@@ -220,6 +227,7 @@ console.log(filename," ",guideType);
 				falseCtrl.style.visibility = "hidden";
 				falseActive.style.visibility = "hidden";
 				scale.style.visibility = "hidden";
+				next.style.visibility = "visible";	
 				nextOff.style.visibility = "visible";
 				let exAudio = document.getElementById("exAudio");
 				let filename = "/guides/"+guide.substring(0,guide.lastIndexOf("-")+1) + "Ex.m4a";
@@ -240,6 +248,7 @@ console.log("loading example audio ",filename);
 				falseCtrl.style.visibility = "hidden";
 				falseActive.style.visibility = "hidden";
 				scale.style.visibility = "visible";
+				next.style.visibility = "visible";	
 				nextOff.style.visibility = "visible";
 				break;
 			case "B":
@@ -256,6 +265,7 @@ console.log("loading example audio ",filename);
 				falseCtrl.style.visibility = "visible";
 				falseActive.style.visibility = "hidden";
 				scale.style.visibility = "hidden";
+				next.style.visibility = "visible";	
 				nextOff.style.visibility = "visible";
 				break;
 			case "F":

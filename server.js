@@ -1,4 +1,4 @@
-// Voicevault server
+////////////////////////////////////////////////////////////////////////// Voicevault server
 // 
 // Mark Gemmell Feb 2021
 //
@@ -7,7 +7,7 @@ const SampleRate = 32000; 						// All audio runs at this sample rate regardless
 const PacketSize = 1000;						// Number of samples in the client audio packets
 var zipson = require('zipson');						// For compressing and decompressing data
 
-// Network code
+////////////////////////////////////////////////////////////////////////// Network code
 //
 // Set up network stack and listen on ports as required
 var fs = require('fs');							// File access
@@ -40,18 +40,32 @@ if (PORT == undefined) {						// Not running on heroku so use SSL
 	});
 }
 
+////////////////////////////////////////////////////////////////////////// OneDrive code
+//
 const request = require('request');					// Used to access cloud storage RestAPI 
+const async = require('async');						// Used for asynchronous large file uploads
 
 // OAuth2 handling for OneDrive
 //
-const clientID = "1cb0b9a5-058b-4224-a31e-7da7f1d82829";
+const clientID = "1cb0b9a5-058b-4224-a31e-7da7f1d82829";		// These should come from environment vars
 const clientSecret = "1n3~PGlmw4xMpaz~hhmq12Na._V-Z9SZ97";
 const scope = "offline_access files.readwrite";
-var callback = "https://voicevault.herokuapp.com/authCallback";
-if (PORT == undefined) callback = "https://localhost/authCallback";
-app.get("/login", function (req, res, next) {
+var callback = "https://voicevault.herokuapp.com/authCallback";		// Authentication callback varies if on heroku
+if (PORT == undefined) callback = "https://localhost/authCallback";	// or running as localhost for testing
+accessToken = "";							// This needs to be valid to allow us to work with OneDrive
+refreshToken = "";							// To renew the access token we need this to be valid. Otherwise OndeDrive owner must re-authenticate
+fs.readFile("rt.txt", function (err, text) {				// Try reading the refresh token saved from a previous session
+	if (err)  return console.log("Error loading previous refresh token:",err);
+	refreshToken = text;
+	console.log("Refresh token read from cache file: ", refreshToken);
+	let now = new Date();
+	saveTextFile("System/", "launched.txt", "voicevault started on "+now+" using recovered token.");
+});
+
+
+app.get("/authorize", function (req, res, next) {			// When the refresh token expires the OneDrive owner needs to re-authorize us here
 	let url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
-	let param = {
+	let param = {							// Parameters for OAuth2 authorization call to Microsoft
 		response_type: "code",
 		client_id: clientID,
 		redirect_uri: callback,
@@ -59,23 +73,234 @@ app.get("/login", function (req, res, next) {
 		scope: scope,
 	};
 	let params = [];
-	for (var name in param) {
+	for (var name in param) {					// Turn parameters into valid URL
 		params.push(name + "=" + encodeURIComponent(param[name]));
 	}
-	var html = '<input type="button" value="auth" onclick="window.open(\'' + url + "?" +
-	params.join("&") +
-	"', 'Authorization', 'width=500,height=600');\">";
-	res.send("Please authenticate in OneDrive: "+html);
+	res.redirect(url+"?"+params.join("&"));
 	next();
 });
 
-app.get("/authCallback", function (req, res, next) {
-	res.send("OneDrive auth callback");
+app.get("/authCallback", function (req, res, next) {			// Microsoft will send the user here if we get authotization
+	res.status(200).send("OneDrive auth callback. code is "+req.query.code);
+	console.log("OneDrive auth callback. code is "+req.query.code);
+	let payload = {
+		code: req.query.code,
+		client_id: clientID,
+		client_secret: clientSecret,
+		redirect_uri: callback,
+		grant_type: "authorization_code",
+	};
+	request.post({							// Use the authorization code to get new access and refresh tokens
+		headers: {'content-type' : 'application/x-www-form-urlencoded'},
+		url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+		form: payload,
+	}, function(error, response, body){				// If all goes well the response will contain the tokens
+		console.log("Microsoft authentication error code:", error);
+		console.log("Microsoft authentication results:");
+		console.log(body);
+		let results = JSON.parse(body);
+		accessToken = results.access_token;
+		refreshToken = results.refresh_token;
+		fs.writeFile("rt.txt", refreshToken, (err) => {		// Save the refresh token so it can be recovered on restarting
+			if (err)  return console.log(err);
+			console.log("rt.txt created");
+			let now = new Date();
+			saveTextFile("System/", "auth.txt", "New authentication obtained correctly on "+now);
+		});
+	});
 	next();
 });
 
+// OneDrive general operations
+//
+function checkFolderExists(name) {					// Tests if a specific folder exists in OneDrive
+	return new Promise(function( resolve, reject ) {		// Returns a promise with success or failure
+		request.post({						// First get a new access token
+			url: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+			form: {
+				redirect_uri: callback,
+				client_id: clientID,
+				client_secret: clientSecret,
+				refresh_token: refreshToken,
+				grant_type: 'refresh_token'
+			},
+		}, function(error, response, body) {			// Response from Microsoft obtained
+			if (error) {					// Error checking
+				console.log("Error obtaining access token: ", error, body);
+				refreshToken = "";
+				reject(error);
+			}						
+			body = JSON.parse(body);
+			if (body.error) {
+				console.log("Error in body after requesting access token: ");
+				console.log(body);
+				refreshToken = "";
+				reject(body.error);
+			}						// No errors if we get to this point
+			request.get({					// Check if the folder (item) exists
+				url: 'https://graph.microsoft.com/v1.0/drive/root:/VoiceVault/' + name,
+				headers: {
+					'Authorization': "Bearer " + body.access_token,
+					'Content-Type': "text/plain",
+				},
+			}, function(er, re, bo) {			// Process any errors
+				if (er) reject(er);			// If the folder doesn't exist return false
+				bo = JSON.parse(bo);
+				if (bo.error) {
+					console.log("Error in body after calling OneDrive API to check if folder exists: ");
+					console.log(bo);
+					reject(bo.error);		// If the folder doesn't exist return false
+				}
+				resolve();
+			});
+		});
+	});
+}
 
-// Client socket event and audio handling area
+// File uploads to OneDrive
+//
+function saveTextFile(folder, name, text) {				// Saves a simple text file to the OneDrive directory for this session
+	name = name + ".txt";						// Saving a text file with extension .txt
+	console.log("Saving file ",name, "with content ",text);
+	request.post({							// First get a new access token
+		url: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+		form: {
+			redirect_uri: callback,
+			client_id: clientID,
+			client_secret: clientSecret,
+			refresh_token: refreshToken,
+			grant_type: 'refresh_token'
+		},
+	}, function(error, response, body) {				// Response from Microsoft obtained
+		if (error) {						// Error checking
+			console.log("Error obtaining access token: ", error, body);
+			refreshToken = "";
+			return;
+		}						
+		body = JSON.parse(body);
+		if (body.error) {
+			console.log("Error in body after requesting access token: ");
+			console.log(body);
+			refreshToken = "";
+			return;
+		}							// No errors if we get to this point
+		request.put({						// Create a new file in OneDrive
+			url: 'https://graph.microsoft.com/v1.0/drive/root:/VoiceVault/' + folder + name + ':/content',
+			headers: {
+				'Authorization': "Bearer " + body.access_token,
+				'Content-Type': "text/plain",
+			},
+			body: text,					// File content goes here
+		}, function(er, re, bo) {				// Process any errors
+			if (er) return console.log("Upload small file session error: ", er);
+			bo = JSON.parse(bo);
+			if (bo.error) {
+				console.log("Error in body after calling OneDrive API to write small file: ");
+				console.log(bo);
+			}
+		});
+	});
+}
+
+var wav = require('node-wav');						// We use WAV encoding for now
+function saveAudioFile(folder, name, audio) {				// Saves a buffer of compressed audio packets to the OneDrive test directory as a WAV file
+	let buffer = [];						// Where all the WAV data will end up
+	audio.forEach( function(zippedAudio) {				// Get all audio in packet buffer into a single buffer
+		let a = zipson.parse(zippedAudio);
+		buffer.push(...a);
+	});
+	buffer = (new Array(3)).fill((buffer));
+	buffer = wav.encode(buffer, {sampleRate: 32000, float: true, bitDepth: 64});
+	name = name+".wav";
+	console.log("Saving WAV file ",name," (",buffer.length," bytes long)");
+	request.post({							// First get a new access token
+		url: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+		form: {
+			redirect_uri: callback,
+			client_id: clientID,
+			client_secret: clientSecret,
+			refresh_token: refreshToken,
+			grant_type: 'refresh_token'
+		},
+	}, function(error, response, body) {				// Response from Microsoft obtained
+		if (error) {						// Error checking
+			console.log("Error obtaining access token: ", error, body);
+			refreshToken = "";
+			return;
+		}							
+		body = JSON.parse(body);
+		if (body.error) {
+			console.log("Error in body after requesting access token: ");
+			console.log(body);
+			refreshToken = "";
+			return;
+		}							// No errors if we get to this point
+		request.post({						// Create a new large file in OneDrive using a POST
+			url: 'https://graph.microsoft.com/v1.0/drive/root:/VoiceVault/' + folder + name + ':/createUploadSession',
+			headers: {					// We aim to get an upload session URL from this
+				'Authorization': "Bearer " + body.access_token,
+				'Content-Type': "application/json",
+			},
+			body: '{"item": {"@microsoft.graph.conflictBehavior": "rename", "name": "' + name + '"}}',
+		}, function(er, re, bo) {				// Process any errors
+			if (er) return console.log("Upload audio file session request error: ", er);
+			bo = JSON.parse(bo);
+			if (bo.error) {
+				console.log("Error in body after calling OneDrive API to write audio file: ");
+				console.log(bo);
+				return;					
+			}						// If we get to here all is good so 
+			uploadFile(bo.uploadUrl, buffer);		// launch large file upload in blocks to the given URL
+		});
+	});
+}
+
+function uploadFile(uploadUrl, data) { 					// Upload a block of data in chunks
+	async.eachSeries(getparams(data.length), function(st, callback){// Slice the file into 60MB blocks
+		setTimeout(function() {					// and call this function in series for each block
+			request.put({					// PUT the block to the URL
+				url: uploadUrl,
+				headers: {
+					'Content-Length': st.clen,
+					'Content-Range': st.cr,
+				},
+				body: data.slice(st.bstart, st.bend + 1),// The audio block is here
+			}, function(er, re, bo) {			// Process errors
+				if (er) return console.log("Upload large file block error: ", er);
+				bo = JSON.parse(bo);
+				if (bo.error) {
+					console.log("Error in body after calling OneDrive API to write large file: ");
+					console.log(bo);
+					return;
+				}
+			});
+			callback();
+		}, st.stime);
+	});
+}
+
+function getparams(size){						// Build array of blocks to send with relevant params for PUT operation
+	let sep = size < (60 * 1024 * 1024) ? size : (60 * 1024 * 1024) - 1;
+	let ar = [];
+	for (var i = 0; i < size; i += sep) {
+		let bstart = i;
+		let bend = i + sep - 1 < size ? i + sep - 1 : size - 1;
+		let cr = 'bytes ' + bstart + '-' + bend + '/' + size;
+		let clen = bend != size - 1 ? sep : size - i;
+		let stime = size < (60 * 1024 * 1024) ? 5000 : 10000;
+		ar.push({
+			bstart : bstart,
+			bend : bend,
+			cr : cr,
+			clen : clen,
+			stime: stime,
+		});
+	}
+	return ar;
+}
+
+
+////////////////////////////////////////////////////////////////////////// Client socket event and audio handling area
 //
 var io  = require('socket.io').listen(server, 
 	{ cookie: false, log: false });					// socketIO for downstream connections
@@ -93,23 +318,30 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('upstreamHi', function (data) { 			// A client requests to connect with an ID
 		console.log("New client ", socket.id," with dir ",data.id);
-		socket.client_id = data.id;
-		let guide = data.id.substring(0,1);			// Capture the guide this user is requesting
-		fs.readdir("./public/guides/", (err, files) => {	// Read the guides available, filter and send to client
-			let pattern = new RegExp(guide + "-[0-9]*-[FBAS]");
-			files = files.filter(function (str) {return pattern.test(str);});
-			socket.emit('g', {files:files});		// Send a "g"uide message with ordered list of guide steps
+		checkFolderExists("Patients/"+data.id).then(function() {;
+			console.log("ID hass been confirmed. Getting guides for patient: ", data.id);
+			socket.clientID = data.id;
+			let guide = data.id.substring(0,1);		// Capture the guide this user is requesting
+			fs.readdir("./public/guides/", (err, files) => {// Read the guides available, filter and send to client
+				let pattern = new RegExp(guide + "-[0-9]*-[FBAS]");
+				files = files.filter(function (str) {return pattern.test(str);});
+				console.log("got guide ",guide," files for client: ",files);
+				socket.emit('g', {files:files});	// Send a "g"uide message with ordered list of guide steps
+			});
+		}).catch(function(err){
+			console.log("Rejecting connection with invalid ID: ",data.id);
+			socket.disconnect();
 		});
 	});
 
 	socket.on('Record', function () {				// Command from client to start recording their audio
-		console.log("Record ", socket.client_id);
+		console.log("Record ", socket.clientID);
 		socket.recording = true;
 		socket.playing = false;
 	});
 
 	socket.on('Play', function () {					// Command from client to start playing their recorded audio
-		console.log("Play ", socket.client_id);
+		console.log("Play ", socket.clientID);
 		if (socket.audiobuf.length > 0) {			// If there is audio recorded then start playback
 			socket.recording = false;
 			socket.playing = true;
@@ -118,20 +350,32 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('Stop', function () {					// Command from client to stop playing or recording their audio
-		console.log("Stop ", socket.client_id);
+		console.log("Stop ", socket.clientID);
 		socket.recording = false;
 		socket.playing = false;
 		socket.emit('s');					// Send stop confirm to client
 	});
 
-	socket.on('Save', function () {					// Command from client to save recorded audio
-		console.log("Save ", socket.client_id);
+	socket.on('Save', function (packet) {				// Command from client to save recorded audio
+		console.log("Save ", socket.clientID," ",packet.step," ",packet.text);
+		let step = packet.step.slice(0,				// Remove the file extension from the guide step
+			packet.step.lastIndexOf("."));			// We will use this as the file name for the response + extension
+		let guideType = 					// Derive the guide step from the step name
+			packet.step[packet.step.lastIndexOf("-")+1];
+		switch (guideType) {
+			case "A":					// Audio step. Save recording in folder (ID) and filename (step)
+				saveAudioFile("Patients/"+socket.clientID+"/", packet.step, socket.audiobuf);
+				break;
+			case "S":
+			case "B":					// Step was a true/false question or a rating on a scale of 1-10
+				saveTextFile("Patients/"+socket.clientID+"/", packet.step, packet.text);
+				break;
+		}
 		socket.recording = false;
 		socket.playing = false;
-		saveRecording(socket.audiobuf);
 	});
 
-	socket.on('u', function (packet) { 				// Audio coming up of our downstream clients
+	socket.on('u', function (packet) { 				// Audio coming up from our downstream clients
 		if (clientPacketBad(packet)) {
 			console.log("Bad client packet");
 			return;
@@ -157,21 +401,7 @@ function clientPacketBad(p) {						// Perform basic checks on packets to stop ba
 }
 
 //var lame = require('lame');
-var wav = require('node-wav');
 //var stream = require('stream');
-function saveRecording(audioBuf) {					// Save recorded audio packets to an MP3 file
-	let audio = [];
-	audioBuf.forEach( function(zippedAudio) {			// Get all audio in packet buffer into a single buffer
-		let a = zipson.parse(zippedAudio);
-		audio.push(...a);
-	});
-	audio = (new Array(3)).fill((audio));
-	let buffer = wav.encode(audio, {sampleRate: 32000, float: true, bitDepth: 64});
-	fs.writeFile("out.wav", buffer, (err) => {
-		if (err)  return console.log(err);
-		console.log("out.wav created");
-	});
-
 //	let encoder = new lame.Encoder({				// Use lame to encode audio as MP3
 //		// input
 //		channels: 1,        
@@ -193,4 +423,3 @@ function saveRecording(audioBuf) {					// Save recorded audio packets to an MP3 
 //	bufferStream.pipe(encoder);					// and then to the encoder
 //	encoder.pipe(fs.createWriteStream('out.mp3');			// and from there to the output file
 //	bufferStream.pipe(fs.createWriteStream('out.mp3'));
-}
