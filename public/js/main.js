@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	let exAudio = document.getElementById("exAudio");
 	nextBtn.onclick = function () {
 		socketIO.emit("Save", {					// Tell the server to save responses
-			step: guides[guideStep], 			// for this step in the guide
+			stepFile: guides[guideStep], 			// corresponding to this step file of the guide
 			text: responseText,				// with response texts if appropriate
 		});	
 		guideStep++;
@@ -211,7 +211,9 @@ console.log(filename," ",guideType);
 		let falseCtrl = document.getElementById("falseCtrl");
 		let falseActive = document.getElementById("falseActive");
 		let scale = document.getElementById("scale");
+		let next = document.getElementById("next");
 		let nextOff = document.getElementById("nextOff");
+		let complete = document.getElementById("testComplete");
 		switch (guideType) {					// Set initial button states for each guide step type
 			case "A":
 				ex.style.visibility = "visible";
@@ -229,6 +231,7 @@ console.log(filename," ",guideType);
 				scale.style.visibility = "hidden";
 				next.style.visibility = "visible";	
 				nextOff.style.visibility = "visible";
+				complete.style.visibility = "hidden";
 				let exAudio = document.getElementById("exAudio");
 				let filename = "/guides/"+guide.substring(0,guide.lastIndexOf("-")+1) + "Ex.m4a";
 console.log("loading example audio ",filename);
@@ -250,6 +253,7 @@ console.log("loading example audio ",filename);
 				scale.style.visibility = "visible";
 				next.style.visibility = "visible";	
 				nextOff.style.visibility = "visible";
+				complete.style.visibility = "hidden";
 				break;
 			case "B":
 				ex.style.visibility = "hidden";
@@ -267,6 +271,7 @@ console.log("loading example audio ",filename);
 				scale.style.visibility = "hidden";
 				next.style.visibility = "visible";	
 				nextOff.style.visibility = "visible";
+				complete.style.visibility = "hidden";
 				break;
 			case "F":
 				ex.style.visibility = "hidden";
@@ -282,8 +287,8 @@ console.log("loading example audio ",filename);
 				falseCtrl.style.visibility = "hidden";
 				falseActive.style.visibility = "hidden";
 				scale.style.visibility = "hidden";
-				let next = document.getElementById("next");
 				next.style.visibility = "hidden";	// Hide the next button as this is the final step
+				complete.style.visibility = "hidden";	// If we fail to load an image this will show, otherwise keep hidden
 				break;
 			default:
 console.log("Unknown guide step type");

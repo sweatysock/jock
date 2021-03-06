@@ -128,14 +128,14 @@ function checkFolderExists(name) {					// Tests if a specific folder exists in O
 			if (error) {					// Error checking
 				console.log("Error obtaining access token: ", error, body);
 				refreshToken = "";
-				reject(error);
+				return reject(error);
 			}						
 			body = JSON.parse(body);
 			if (body.error) {
 				console.log("Error in body after requesting access token: ");
 				console.log(body);
 				refreshToken = "";
-				reject(body.error);
+				return reject(body.error);
 			}						// No errors if we get to this point
 			request.get({					// Check if the folder (item) exists
 				url: 'https://graph.microsoft.com/v1.0/drive/root:/VoiceVault/' + name,
@@ -144,12 +144,12 @@ function checkFolderExists(name) {					// Tests if a specific folder exists in O
 					'Content-Type': "text/plain",
 				},
 			}, function(er, re, bo) {			// Process any errors
-				if (er) reject(er);			// If the folder doesn't exist return false
+				if (er) return reject(er);		// If the folder doesn't exist return false
 				bo = JSON.parse(bo);
 				if (bo.error) {
 					console.log("Error in body after calling OneDrive API to check if folder exists: ");
 					console.log(bo);
-					reject(bo.error);		// If the folder doesn't exist return false
+					return reject(bo.error);	// If the folder doesn't exist return false
 				}
 				resolve();
 			});
@@ -241,7 +241,7 @@ function saveAudioFile(folder, name, audio) {				// Saves a buffer of compressed
 				'Authorization': "Bearer " + body.access_token,
 				'Content-Type': "application/json",
 			},
-			body: '{"item": {"@microsoft.graph.conflictBehavior": "rename", "name": "' + name + '"}}',
+			body: '{"item": {"@microsoft.graph.conflictBehavior": "replace", "name": "' + name + '"}}',
 		}, function(er, re, bo) {				// Process any errors
 			if (er) return console.log("Upload audio file session request error: ", er);
 			bo = JSON.parse(bo);
@@ -357,18 +357,18 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('Save', function (packet) {				// Command from client to save recorded audio
-		console.log("Save ", socket.clientID," ",packet.step," ",packet.text);
-		let step = packet.step.slice(0,				// Remove the file extension from the guide step
-			packet.step.lastIndexOf("."));			// We will use this as the file name for the response + extension
+		console.log("Save ", socket.clientID," ",packet.stepFile," ",packet.text);
+		let step = packet.stepFile.slice(0,				// Remove the file extension from the guide step
+			packet.stepFile.lastIndexOf("."));			// We will use this as the file name for the response + extension
 		let guideType = 					// Derive the guide step from the step name
-			packet.step[packet.step.lastIndexOf("-")+1];
+			packet.stepFile[packet.stepFile.lastIndexOf("-")+1];
 		switch (guideType) {
 			case "A":					// Audio step. Save recording in folder (ID) and filename (step)
-				saveAudioFile("Patients/"+socket.clientID+"/", packet.step, socket.audiobuf);
+				saveAudioFile("Patients/"+socket.clientID+"/", step, socket.audiobuf);
 				break;
 			case "S":
 			case "B":					// Step was a true/false question or a rating on a scale of 1-10
-				saveTextFile("Patients/"+socket.clientID+"/", packet.step, packet.text);
+				saveTextFile("Patients/"+socket.clientID+"/", step, packet.text);
 				break;
 		}
 		socket.recording = false;
@@ -399,6 +399,14 @@ io.sockets.on('connection', function (socket) {
 function clientPacketBad(p) {						// Perform basic checks on packets to stop basic hacks
 	return false;
 }
+
+// Supervisor. Checks everything is good with OneDrive every minute
+//
+function supervisor() {
+	let now = new Date();
+	saveTextFile("System/", "ping.txt", "VoiceVault pinging oneDrive on "+now);
+}
+setInterval(supervisor, 60000);						// Call supervisor every minute
 
 //var lame = require('lame');
 //var stream = require('stream');
