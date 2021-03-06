@@ -59,7 +59,7 @@ fs.readFile("rt.txt", function (err, text) {				// Try reading the refresh token
 	refreshToken = text;
 	console.log("Refresh token read from cache file: ", refreshToken);
 	let now = new Date();
-	saveTextFile("System/", "launched.txt", "voicevault started on "+now+" using recovered token.");
+	saveTextFile("System/", "launched", "voicevault started on "+now+" using recovered token.");
 });
 
 
@@ -105,7 +105,7 @@ app.get("/authCallback", function (req, res, next) {			// Microsoft will send th
 			if (err)  return console.log(err);
 			console.log("rt.txt created");
 			let now = new Date();
-			saveTextFile("System/", "auth.txt", "New authentication obtained correctly on "+now);
+			saveTextFile("System/", "auth", "New authentication obtained correctly on "+now);
 		});
 	});
 	next();
@@ -404,7 +404,7 @@ function clientPacketBad(p) {						// Perform basic checks on packets to stop ba
 //
 function supervisor() {
 	let now = new Date();
-	saveTextFile("System/", "ping.txt", "VoiceVault pinging oneDrive on "+now);
+	saveTextFile("System/", "ping", "VoiceVault pinging oneDrive on "+now);
 }
 setInterval(supervisor, 60000);						// Call supervisor every minute
 
