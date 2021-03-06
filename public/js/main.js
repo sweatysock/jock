@@ -386,7 +386,7 @@ function processAudio(e) {						// Main processing loop
 				micIn.peak = obj.peak;			// Note peak for local display
 			micIn.gain = obj.finalGain;			// Store gain for next loop
 			if (micIn.muted) 				// If mic muted send silence
-				audio = new Array(micPacketSize).fill(0);
+				audio = new Array(PacketSize).fill(0);
 			let a = zipson.stringify(audio);		// Compress audio
 			audio = a;	
 			let packet = {

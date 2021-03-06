@@ -143,7 +143,7 @@ function checkFolderExists(name) {					// Tests if a specific folder exists in O
 					'Authorization': "Bearer " + body.access_token,
 					'Content-Type': "text/plain",
 				},
-			}, function(er, re, bo) {			// Process any errors
+			}, function(er, re, bo) {			// Process any errors first
 				if (er) return reject(er);		// If the folder doesn't exist return false
 				bo = JSON.parse(bo);
 				if (bo.error) {
@@ -151,7 +151,62 @@ function checkFolderExists(name) {					// Tests if a specific folder exists in O
 					console.log(bo);
 					return reject(bo.error);	// If the folder doesn't exist return false
 				}
-				resolve();
+				try {					// Otherwise try the route of success
+					resolve();
+				} catch(e) {
+					reject(e);
+				}
+			});
+		});
+	});
+}
+
+// NOTE: This can only create folders in the root directory right now. When specifying a sub folder it gives an API error
+function createFolder(folder, name) {					// Creates a new folder called name in folder in OneDrive
+	return new Promise(function( resolve, reject ) {		// Returns a promise with success or failure
+		request.post({						// First get a new access token
+			url: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+			form: {
+				redirect_uri: callback,
+				client_id: clientID,
+				client_secret: clientSecret,
+				refresh_token: refreshToken,
+				grant_type: 'refresh_token'
+			},
+		}, function(error, response, body) {			// Response from Microsoft obtained
+			if (error) {					// Error checking
+				console.log("Error obtaining access token: ", error, body);
+				refreshToken = "";
+				return reject(error);
+			}						
+			body = JSON.parse(body);
+			if (body.error) {
+				console.log("Error in body after requesting access token: ");
+				console.log(body);
+				refreshToken = "";
+				return reject(body.error);
+			}						// No errors if we get to this point
+console.log('POST to https://graph.microsoft.com/v1.0/drive/root/'+folder+'children');
+			request.post({					// Create the folder (item) with <name>
+				url: 'https://graph.microsoft.com/v1.0/drive/root/'+folder+'children',
+				headers: {
+					'Authorization': "Bearer " + body.access_token,
+					'Content-Type': "application/json",
+				},
+				body: '{"@microsoft.graph.conflictBehavior": "replace", "folder": {}, "name": "' + name + '"}',
+			}, function(er, re, bo) {			// Process any errors first
+				if (er) return reject(er);		// If the folder doesn't exist return false
+				bo = JSON.parse(bo);
+				if (bo.error) {
+					console.log("Error in body after calling OneDrive API to create new folder ",name," in folder ",folder,": ");
+					console.log(bo);
+					return reject(bo.error);	// If the folder doesn't exist return false
+				}
+				try {					// Otherwise try the route of success
+					resolve();
+				} catch(e) {
+					reject(e);
+				}
 			});
 		});
 	});
