@@ -374,11 +374,10 @@ function processAudio(e) {						// Main processing loop
 
 	let inData = e.inputBuffer.getChannelData(0);			// Audio from the mic
 	let outData = e.outputBuffer.getChannelData(0);			// Audio going to the speaker
-micChunks++;
-return;
 	// 1. Get Mic audio, buffer it, and send it to server if enough buffered
 	if (socketConnected) {						// Need connection to send
 		micBuffer.push(...inData);				// Buffer mic audio
+micChunks++;
 		while (micBuffer.length > micPacketSize) {		// While enough audio in buffer 
 			let audio = micBuffer.splice(0, micPacketSize);	// Get a packet of audio
 			audio = reSample(audio, downCache, PacketSize);	
