@@ -452,9 +452,9 @@ tracef("samplerate=",soundcardSampleRate," micPacSz=",micPacketSize);
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
-		node = context.createJavaScriptNode(ChunkSize, 1, 1);	// The new way is to use a worklet
+		node = context.createJavaScriptNode(ChunkSize, 2, 2);	// The new way is to use a worklet
 	} else {							// but the results are not as good
-		node = context.createScriptProcessor(ChunkSize, 1, 1);	// and it doesn't work everywhere
+		node = context.createScriptProcessor(ChunkSize, 2, 2);	// and it doesn't work everywhere
 	}
 	node.onaudioprocess = processAudio;				// Link the callback to the node
 
