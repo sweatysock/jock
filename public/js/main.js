@@ -610,7 +610,7 @@ function everySecond() {
 	outPeak = 0;
 	micChunks = 0;
 }
-setInterval(everySecond, 1000);						// Call report generator and slow UI updater once a second
+setInterval(everySecond, 10000);						// Call report generator and slow UI updater once a second
 
 
 // Tracing to the traceDiv (a Div with id="Trace" in the DOM)
