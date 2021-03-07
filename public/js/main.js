@@ -7,7 +7,7 @@ const SampleRate = 32000; 						// Global sample rate used for all audio
 const PacketSize = 1000;						// Server packet size we must conform to
 const HighFilterFreq = SampleRate/2.2;					// Mic filter to remove high frequencies before resampling
 const LowFilterFreq = 30;						// Mic filter to remove low frequencies before resampling
-const ChunkSize = 4096;							// Audio chunk size. Fixed by js script processor
+const ChunkSize = 1024;							// Audio chunk size. Fixed by js script processor
 var soundcardSampleRate = null; 					// Get this from context 
 var micPacketSize = 0;							// Calculate this once we have soundcard sample rate
 var socketConnected = false; 						// True when socket is up
@@ -381,19 +381,19 @@ function processAudio(e) {						// Main processing loop
 micChunks++;
 		while (micBuffer.length > micPacketSize) {		// While enough audio in buffer 
 			let audio = micBuffer.splice(0, micPacketSize);	// Get a packet of audio
-//			audio = reSample(audio, downCache, PacketSize);	
-//			let obj = applyAutoGain(audio, micIn);		// Amplify mic with auto limiter
+			audio = reSample(audio, downCache, PacketSize);	
+			let obj = applyAutoGain(audio, micIn);		// Amplify mic with auto limiter
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
 			micIn.gain = obj.finalGain;			// Store gain for next loop
 			if (micIn.muted) 				// If mic muted send silence
 				audio = new Array(PacketSize).fill(0);
-//			let a = zipson.stringify(audio);		// Compress audio
+			let a = zipson.stringify(audio);		// Compress audio
 			audio = a;	
 			let packet = {
 				audio		: audio,		// Audio block
 			};
-	//		socketIO.emit("u",packet);
+			socketIO.emit("u",packet);
 			packetsOut++;
 		}
 	}
