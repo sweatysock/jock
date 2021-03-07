@@ -381,19 +381,19 @@ function processAudio(e) {						// Main processing loop
 micChunks++;
 		while (micBuffer.length > micPacketSize) {		// While enough audio in buffer 
 			let audio = micBuffer.splice(0, micPacketSize);	// Get a packet of audio
-			audio = reSample(audio, downCache, PacketSize);	
-			let obj = applyAutoGain(audio, micIn);		// Amplify mic with auto limiter
+//			audio = reSample(audio, downCache, PacketSize);	
+//			let obj = applyAutoGain(audio, micIn);		// Amplify mic with auto limiter
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
 			micIn.gain = obj.finalGain;			// Store gain for next loop
 			if (micIn.muted) 				// If mic muted send silence
 				audio = new Array(PacketSize).fill(0);
-			let a = zipson.stringify(audio);		// Compress audio
+//			let a = zipson.stringify(audio);		// Compress audio
 			audio = a;	
 			let packet = {
 				audio		: audio,		// Audio block
 			};
-			socketIO.emit("u",packet);
+	//		socketIO.emit("u",packet);
 			packetsOut++;
 		}
 	}
