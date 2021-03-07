@@ -378,6 +378,7 @@ function processAudio(e) {						// Main processing loop
 	// 1. Get Mic audio, buffer it, and send it to server if enough buffered
 	if (socketConnected) {						// Need connection to send
 		micBuffer.push(...inData);				// Buffer mic audio
+micChunks++;
 		while (micBuffer.length > micPacketSize) {		// While enough audio in buffer 
 			let audio = micBuffer.splice(0, micPacketSize);	// Get a packet of audio
 			audio = reSample(audio, downCache, PacketSize);	
@@ -445,6 +446,7 @@ function handleAudio(stream) {						// We have obtained media access
 	soundcardSampleRate = context.sampleRate;			// Get HW sample rate... varies per platform
 	micPacketSize = Math.round(PacketSize * 			// How much micAudio is needed to fill a Packet
 		soundcardSampleRate / SampleRate);			// at our standard SampleRate (rounding error is an issue?)
+tracef("samplerate=",soundcardSampleRate," micPacSz=",micPacketSize);
 	micAccessAllowed = true;
 
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
@@ -576,6 +578,7 @@ var packetsIn = 0;
 var packetsOut = 0;
 var overflows = 0;
 var shortages = 0;
+var micChunks = 0;
 function everySecond() {
 	let upperLimit = SampleRate/PacketSize * 1.2;
 	let lowerLimit = SampleRate/PacketSize * 0.8;
@@ -597,13 +600,14 @@ function everySecond() {
 	if (outPeak > 0.95) outStatus = "Orange";
 	if (outPeak == 0) outStatus = "Red";
 	setStatusLED("outStatus",outStatus);
-	trace("In=",packetsIn," Out=", packetsOut," Ov=", overflows," Sh=", shortages);
+	trace("In=",packetsIn," Out=", packetsOut," micCh=",micChunks," Ov=", overflows," Sh=", shortages);
 	packetsIn = 0;
 	packetsOut = 0;
 	overflows = 0;
 	shortages = 0;
 	micIn.peak = 0;
 	outPeak = 0;
+	micChunks = 0;
 }
 setInterval(everySecond, 1000);						// Call report generator and slow UI updater once a second
 
