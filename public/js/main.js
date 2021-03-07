@@ -458,18 +458,19 @@ tracef("samplerate=",soundcardSampleRate," micPacSz=",micPacketSize);
 	}
 	node.onaudioprocess = processAudio;				// Link the callback to the node
 
-	micFilter1 = context.createBiquadFilter();			// Input low pass filter to avoid aliasing
-	micFilter1.type = 'lowpass';
-	micFilter1.frequency.value = HighFilterFreq;
-	micFilter1.Q.value = 1;
-	micFilter2 = context.createBiquadFilter();			// Input high pass filter to remove thumps
-	micFilter2.type = 'highpass';
-	micFilter2.frequency.value = LowFilterFreq;
-	micFilter2.Q.value = 1;
+//	micFilter1 = context.createBiquadFilter();			// Input low pass filter to avoid aliasing
+//	micFilter1.type = 'lowpass';
+//	micFilter1.frequency.value = HighFilterFreq;
+//	micFilter1.Q.value = 1;
+//	micFilter2 = context.createBiquadFilter();			// Input high pass filter to remove thumps
+//	micFilter2.type = 'highpass';
+//	micFilter2.frequency.value = LowFilterFreq;
+//	micFilter2.Q.value = 1;
 	
-	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
-	micFilter1.connect(micFilter2);					// then to the highpass filter
-	micFilter2.connect(node);					// then to the node where all the work is done
+//	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
+//	micFilter1.connect(micFilter2);					// then to the highpass filter
+//	micFilter2.connect(node);					// then to the node where all the work is done
+liveSource.connect(node);
 	node.connect(context.destination);				// and finally to the output
 }
 
