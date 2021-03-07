@@ -7,7 +7,7 @@ const SampleRate = 32000; 						// Global sample rate used for all audio
 const PacketSize = 1000;						// Server packet size we must conform to
 const HighFilterFreq = SampleRate/2.2;					// Mic filter to remove high frequencies before resampling
 const LowFilterFreq = 30;						// Mic filter to remove low frequencies before resampling
-const ChunkSize = 1024*8;							// Audio chunk size. Fixed by js script processor
+const ChunkSize = 4096;							// Audio chunk size. Fixed by js script processor
 var soundcardSampleRate = null; 					// Get this from context 
 var micPacketSize = 0;							// Calculate this once we have soundcard sample rate
 var socketConnected = false; 						// True when socket is up
@@ -375,10 +375,11 @@ function processAudio(e) {						// Main processing loop
 	let inData = e.inputBuffer.getChannelData(0);			// Audio from the mic
 	let outData = e.outputBuffer.getChannelData(0);			// Audio going to the speaker
 
+micChunks++;
+return;
 	// 1. Get Mic audio, buffer it, and send it to server if enough buffered
 	if (socketConnected) {						// Need connection to send
 		micBuffer.push(...inData);				// Buffer mic audio
-micChunks++;
 		while (micBuffer.length > micPacketSize) {		// While enough audio in buffer 
 			let audio = micBuffer.splice(0, micPacketSize);	// Get a packet of audio
 			audio = reSample(audio, downCache, PacketSize);	
@@ -452,25 +453,24 @@ tracef("samplerate=",soundcardSampleRate," micPacSz=",micPacketSize);
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
-		node = context.createJavaScriptNode(ChunkSize, 2, 2);	// The new way is to use a worklet
+		node = context.createJavaScriptNode(ChunkSize, 1, 1);	// The new way is to use a worklet
 	} else {							// but the results are not as good
-		node = context.createScriptProcessor(ChunkSize, 2, 2);	// and it doesn't work everywhere
+		node = context.createScriptProcessor(ChunkSize, 1, 1);	// and it doesn't work everywhere
 	}
 	node.onaudioprocess = processAudio;				// Link the callback to the node
 
-//	micFilter1 = context.createBiquadFilter();			// Input low pass filter to avoid aliasing
-//	micFilter1.type = 'lowpass';
-//	micFilter1.frequency.value = HighFilterFreq;
-//	micFilter1.Q.value = 1;
-//	micFilter2 = context.createBiquadFilter();			// Input high pass filter to remove thumps
-//	micFilter2.type = 'highpass';
-//	micFilter2.frequency.value = LowFilterFreq;
-//	micFilter2.Q.value = 1;
+	micFilter1 = context.createBiquadFilter();			// Input low pass filter to avoid aliasing
+	micFilter1.type = 'lowpass';
+	micFilter1.frequency.value = HighFilterFreq;
+	micFilter1.Q.value = 1;
+	micFilter2 = context.createBiquadFilter();			// Input high pass filter to remove thumps
+	micFilter2.type = 'highpass';
+	micFilter2.frequency.value = LowFilterFreq;
+	micFilter2.Q.value = 1;
 	
-//	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
-//	micFilter1.connect(micFilter2);					// then to the highpass filter
-//	micFilter2.connect(node);					// then to the node where all the work is done
-liveSource.connect(node);
+	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
+	micFilter1.connect(micFilter2);					// then to the highpass filter
+	micFilter2.connect(node);					// then to the node where all the work is done
 	node.connect(context.destination);				// and finally to the output
 }
 
