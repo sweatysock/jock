@@ -55,11 +55,21 @@ socketIO.on('d', function (data) { 					// Audio data coming in from server
 	}
 	let audio = zipson.parse(data.audio);				// Uncompress audio
 	audio = reSample(audio, upCache, micPacketSize); 		// Upsample back to local HW sample rate
+	let tempPeak = maxValue(audio);					// Capture output peak level for display
+	if (tempPeak > outPeak) outPeak = tempPeak;
+	if (!monitor) audio = new Array(micPacketSize).fill(0);		// If monitor is off fill sound with zeros
+if (true) {
+	if (node != undefined)
+		node.port.postMessage({
+			"audio": audio,
+		});
+} else {
 	spkrBuffer.push(...audio);					// put left mix in the left speaker buffer
 	if (spkrBuffer.length > maxBuffSize) {				// If too full merge final 400 samples
 		overflows++;
 		spkrBuffer.splice(maxBuffSize/2,maxBuffSize/2);		// Chop buffer in half
 	}
+}
 });
 
 socketIO.on('g', function (data) { 					// List of guide steps to follow
@@ -433,6 +443,7 @@ micChunks++;
 var micFilter1;								// Mic filters are adjusted dynamically
 var micFilter2;
 var context;
+var node = undefined;
 function handleAudio(stream) {						// We have obtained media access
 	let AudioContext = window.AudioContext 				// Default
 		|| window.webkitAudioContext 				// Safari and old versions of Chrome
@@ -449,13 +460,41 @@ tracef("samplerate=",soundcardSampleRate," micPacSz=",micPacketSize);
 	micAccessAllowed = true;
 
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
-	let node = undefined;
+if (true) {
+	context.audioWorklet.addModule('js/worklet.js').then(() => {
+		node = new AudioWorkletNode(
+			context, 'voicevault-processor', {parameterData:{ size: micPacketSize } }
+		);
+		micFilter2.connect(node);					
+		node.connect(context.destination);			
+		node.port.onmessage = (e) => {
+			if (socketConnected) {				// Need connection to send
+				let audio = e.data.audio;
+				audio = reSample(audio, downCache, PacketSize);	
+				let obj = applyAutoGain(audio, micIn);	// Amplify mic with auto limiter
+				if (obj.peak > micIn.peak) 
+					micIn.peak = obj.peak;		// Note peak for local display
+				micIn.gain = obj.finalGain;		// Store gain for next loop
+				if (micIn.muted) 			// If mic muted send silence
+					audio = new Array(PacketSize).fill(0);
+				let a = zipson.stringify(audio);	// Compress audio
+				audio = a;	
+				let packet = {
+					audio		: audio,	// Audio block
+				};
+				socketIO.emit("u",packet);
+				packetsOut++;
+			}
+		}
+	});
+} else {
 	if (!context.createScriptProcessor) {				// Audio processor node
 		node = context.createJavaScriptNode(ChunkSize, 1, 1);	// The new way is to use a worklet
 	} else {							// but the results are not as good
 		node = context.createScriptProcessor(ChunkSize, 1, 1);	// and it doesn't work everywhere
 	}
 	node.onaudioprocess = processAudio;				// Link the callback to the node
+}
 
 	micFilter1 = context.createBiquadFilter();			// Input low pass filter to avoid aliasing
 	micFilter1.type = 'lowpass';
@@ -608,7 +647,7 @@ function everySecond() {
 	outPeak = 0;
 	micChunks = 0;
 }
-setInterval(everySecond, 10000);						// Call report generator and slow UI updater once a second
+setInterval(everySecond, 1000);						// Call report generator and slow UI updater once a second
 
 
 // Tracing to the traceDiv (a Div with id="Trace" in the DOM)
