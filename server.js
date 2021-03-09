@@ -47,8 +47,10 @@ const async = require('async');						// Used for asynchronous large file uploads
 
 // OAuth2 handling for OneDrive
 //
-const clientID = "1cb0b9a5-058b-4224-a31e-7da7f1d82829";		// These should come from environment vars
-const clientSecret = "1n3~PGlmw4xMpaz~hhmq12Na._V-Z9SZ97";
+var clientID = "1cb0b9a5-058b-4224-a31e-7da7f1d82829";			// These are default values for testing
+var clientSecret = "1n3~PGlmw4xMpaz~hhmq12Na._V-Z9SZ97";
+if (process.env.clientID != undefined) clientID = process.env.clientID;	// If we are running in Heroku they should be set
+if (process.env.clientSecret != undefined) clientID = process.env.clientSecret;
 const scope = "offline_access files.readwrite";
 var callback = "https://voicevault.herokuapp.com/authCallback";		// Authentication callback varies if on heroku
 if (PORT == undefined) callback = "https://localhost/authCallback";	// or running as localhost for testing
@@ -393,6 +395,7 @@ io.sockets.on('connection', function (socket) {
 		console.log("Record ", socket.clientID);
 		socket.recording = true;
 		socket.playing = false;
+		socket.audiobuf = [];					// Empty the audiobuf of any previous recording
 	});
 
 	socket.on('Play', function () {					// Command from client to start playing their recorded audio

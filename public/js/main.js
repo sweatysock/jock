@@ -43,7 +43,18 @@ socketIO.on('connect', function (socket) {				// New connection coming in
 	trace('socket connected!');
 	let urlParams = new URLSearchParams(window.location.search);	
 	myID = urlParams.get('id');					// Get our ID from the URL
-	guideName = myID.substring(0, myID.indexOf("-"));		// Get guide name which is the string up to a "-" in the ID
+	if (!myID.match(/[A-Z]-[0-9]+-[0-9]+/g)) return alert("URL incorrect");
+	let p = myID.indexOf("-");
+	testDate = myID.substring(p+1, (p+9) );
+	let now = new Date();
+	let m = "" + (now.getMonth()+1);
+	m = m.length < 2 ? "0" + m : m;
+	let d = "" + now.getDate();
+	d = d.length < 2 ? "0" + d : d;
+	let st = "" + now.getFullYear() + m + d;
+console.log(testDate," ",st);
+	if (testDate !== st) alert("Warning: Today is not the date of the test");
+	guideName = myID.substring(0, p);				// Get guide name which is the string up to a "-" in the ID
 	socketIO.emit("upstreamHi",{id:myID});				// Register with server supplying the ID
 	socketConnected = true;						// The socket can be used once we have a channel
 });
@@ -289,6 +300,7 @@ console.log("loading example audio ",filename);
 				scale.style.visibility = "hidden";
 				next.style.visibility = "hidden";	// Hide the next button as this is the final step
 				complete.style.visibility = "hidden";	// If we fail to load an image this will show, otherwise keep hidden
+				context.close();			// As guide has completed release audio resources
 				break;
 			default:
 console.log("Unknown guide step type");
@@ -301,6 +313,7 @@ function guideComplete() {						// If a guide image doesn't load we assume the g
 	guideImage.style.visibility = "hidden";
 	let complete = document.getElementById("testComplete");
 	complete.style.visibility = "visible";
+	context.close();						// As guide has completed release audio resources
 }
 
 
