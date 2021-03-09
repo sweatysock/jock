@@ -83,7 +83,7 @@ app.get("/authorize", function (req, res, next) {			// When the refresh token ex
 });
 
 app.get("/authCallback", function (req, res, next) {			// Microsoft will send the user here if we get authotization
-	res.status(200).send("OneDrive auth callback. code is "+req.query.code);
+	res.status(200).send("OneDrive authorization complete. You may close this window.");
 	console.log("OneDrive auth callback. code is "+req.query.code);
 	let payload = {
 		code: req.query.code,
@@ -130,6 +130,7 @@ function checkFolderExists(name) {					// Tests if a specific folder exists in O
 			if (error) {					// Error checking
 				console.log("Error obtaining access token: ", error, body);
 				refreshToken = "";
+				io.sockets.emit('a');			// Send an "a"uthorization error to all connected clients
 				return reject(error);
 			}						
 			body = JSON.parse(body);
@@ -137,6 +138,7 @@ function checkFolderExists(name) {					// Tests if a specific folder exists in O
 				console.log("Error in body after requesting access token: ");
 				console.log(body);
 				refreshToken = "";
+				io.sockets.emit('a');			// Send an "a"uthorization error to all connected clients
 				return reject(body.error);
 			}						// No errors if we get to this point
 			request.get({					// Check if the folder (item) exists
@@ -179,6 +181,7 @@ function createFolder(folder, name) {					// Creates a new folder called name in
 			if (error) {					// Error checking
 				console.log("Error obtaining access token: ", error, body);
 				refreshToken = "";
+				io.sockets.emit('a');			// Send an "a"uthorization error to all connected clients
 				return reject(error);
 			}						
 			body = JSON.parse(body);
@@ -186,6 +189,7 @@ function createFolder(folder, name) {					// Creates a new folder called name in
 				console.log("Error in body after requesting access token: ");
 				console.log(body);
 				refreshToken = "";
+				io.sockets.emit('a');			// Send an "a"uthorization error to all connected clients
 				return reject(body.error);
 			}						// No errors if we get to this point
 console.log('POST to https://graph.microsoft.com/v1.0/drive/root/'+folder+'children');
@@ -232,6 +236,7 @@ function saveTextFile(folder, name, text) {				// Saves a simple text file to th
 		if (error) {						// Error checking
 			console.log("Error obtaining access token: ", error, body);
 			refreshToken = "";
+			io.sockets.emit('a');				// Send an "a"uthorization error to all connected clients
 			return;
 		}						
 		body = JSON.parse(body);
@@ -239,6 +244,7 @@ function saveTextFile(folder, name, text) {				// Saves a simple text file to th
 			console.log("Error in body after requesting access token: ");
 			console.log(body);
 			refreshToken = "";
+			io.sockets.emit('a');				// Send an "a"uthorization error to all connected clients
 			return;
 		}							// No errors if we get to this point
 		request.put({						// Create a new file in OneDrive
@@ -283,6 +289,7 @@ function saveAudioFile(folder, name, audio) {				// Saves a buffer of compressed
 		if (error) {						// Error checking
 			console.log("Error obtaining access token: ", error, body);
 			refreshToken = "";
+			io.sockets.emit('a');				// Send an "a"uthorization error to all connected clients
 			return;
 		}							
 		body = JSON.parse(body);
@@ -290,6 +297,7 @@ function saveAudioFile(folder, name, audio) {				// Saves a buffer of compressed
 			console.log("Error in body after requesting access token: ");
 			console.log(body);
 			refreshToken = "";
+			io.sockets.emit('a');				// Send an "a"uthorization error to all connected clients
 			return;
 		}							// No errors if we get to this point
 		request.post({						// Create a new large file in OneDrive using a POST
@@ -375,6 +383,7 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('upstreamHi', function (data) { 			// A client requests to connect with an ID
 		console.log("New client ", socket.id," with dir ",data.id);
+		if (refreshToken === "") return socket.emit('a');	// Send an "a"uthorization error to client and quit there
 		checkFolderExists("Patients/"+data.id).then(function() {;
 			console.log("ID hass been confirmed. Getting guides for patient: ", data.id);
 			socket.clientID = data.id;

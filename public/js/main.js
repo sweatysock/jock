@@ -53,7 +53,7 @@ socketIO.on('connect', function (socket) {				// New connection coming in
 	d = d.length < 2 ? "0" + d : d;
 	let st = "" + now.getFullYear() + m + d;
 console.log(testDate," ",st);
-	if (testDate !== st) alert("Warning: Today is not the date of the test");
+	//if (testDate !== st) alert("Warning: Today is not the date of the test");
 	guideName = myID.substring(0, p);				// Get guide name which is the string up to a "-" in the ID
 	socketIO.emit("upstreamHi",{id:myID});				// Register with server supplying the ID
 	socketConnected = true;						// The socket can be used once we have a channel
@@ -82,6 +82,13 @@ socketIO.on('g', function (data) { 					// List of guide steps to follow
 socketIO.on('s', function (data) {					// Playing or recording has stopped
 	stopOff.style.visibility = "visible";				// Disable stop button
 	monitor = false;						// Turn off monitor in case we were paying our recording back
+});
+
+socketIO.on('a', function (data) {					// The server needs to be re-authorized by the OneDrive owner
+	let authEr = document.getElementById("authEr");			// Display the authorization error
+	authEr.style.visibility = "visible";				// This will cover all the screen
+	monitor = false;						// Turn off monitor in case we were paying our recording back
+	context.close();						// Release audio resources
 });
 
 socketIO.on('disconnect', function () {
@@ -311,8 +318,6 @@ console.log("Unknown guide step type");
 function guideComplete() {						// If a guide image doesn't load we assume the guide is done
 	let guideImage = document.getElementById("guideImage");
 	guideImage.style.visibility = "hidden";
-	let complete = document.getElementById("testComplete");
-	complete.style.visibility = "visible";
 	context.close();						// As guide has completed release audio resources
 }
 
