@@ -231,7 +231,6 @@ console.log(filename," ",guideType);
 		let scale = document.getElementById("scale");
 		let next = document.getElementById("next");
 		let nextOff = document.getElementById("nextOff");
-		let complete = document.getElementById("testComplete");
 		switch (guideType) {					// Set initial button states for each guide step type
 			case "A":
 				ex.style.visibility = "visible";
@@ -249,7 +248,6 @@ console.log(filename," ",guideType);
 				scale.style.visibility = "hidden";
 				next.style.visibility = "visible";	
 				nextOff.style.visibility = "visible";
-				complete.style.visibility = "hidden";
 				let exAudio = document.getElementById("exAudio");
 				let filename = "/guides/"+guide.substring(0,guide.lastIndexOf("-")+1) + "Ex.m4a";
 console.log("loading example audio ",filename);
@@ -271,7 +269,6 @@ console.log("loading example audio ",filename);
 				scale.style.visibility = "visible";
 				next.style.visibility = "visible";	
 				nextOff.style.visibility = "visible";
-				complete.style.visibility = "hidden";
 				break;
 			case "B":
 				ex.style.visibility = "hidden";
@@ -289,7 +286,6 @@ console.log("loading example audio ",filename);
 				scale.style.visibility = "hidden";
 				next.style.visibility = "visible";	
 				nextOff.style.visibility = "visible";
-				complete.style.visibility = "hidden";
 				break;
 			case "F":
 				ex.style.visibility = "hidden";
@@ -306,7 +302,6 @@ console.log("loading example audio ",filename);
 				falseActive.style.visibility = "hidden";
 				scale.style.visibility = "hidden";
 				next.style.visibility = "hidden";	// Hide the next button as this is the final step
-				complete.style.visibility = "hidden";	// If we fail to load an image this will show, otherwise keep hidden
 				context.close();			// As guide has completed release audio resources
 				break;
 			default:
