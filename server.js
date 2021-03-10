@@ -49,10 +49,10 @@ const async = require('async');						// Used for asynchronous large file uploads
 //
 var clientID = "1cb0b9a5-058b-4224-a31e-7da7f1d82829";			// These are default values for testing
 var clientSecret = "1n3~PGlmw4xMpaz~hhmq12Na._V-Z9SZ97";
-console.log("clientID=",clientID," clientSecret="clientSecret);
+console.log("clientID=",clientID," clientSecret=",clientSecret);
 if (process.env.clientID != undefined) clientID = process.env.clientID;	// If we are running in Heroku they should be set
 if (process.env.clientSecret != undefined) clientID = process.env.clientSecret;
-console.log("clientID=",clientID," clientSecret="clientSecret);
+console.log("clientID=",clientID," clientSecret=",clientSecret);
 const scope = "offline_access files.readwrite";
 var callback = "https://voicevault.herokuapp.com/authCallback";		// Authentication callback varies if on heroku
 if (PORT == undefined) callback = "https://localhost/authCallback";	// or running as localhost for testing
