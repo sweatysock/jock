@@ -248,7 +248,7 @@ function saveTextFile(folder, name, text) {				// Saves a simple text file to th
 			return;
 		}							// No errors if we get to this point
 		request.put({						// Create a new file in OneDrive
-			url: 'https://graph.microsoft.com/v1.0/drive/root:/VoiceVault/' + folder + name + ':/content',
+			url: 'https://graph.microsoft.com/v1.0/drive/root:/VoiceVault/' + folder + name + ':/content?@microsoft.graph.conflictBehavior=rename',
 			headers: {
 				'Authorization': "Bearer " + body.access_token,
 				'Content-Type': "text/plain",
@@ -306,7 +306,7 @@ function saveAudioFile(folder, name, audio) {				// Saves a buffer of compressed
 				'Authorization': "Bearer " + body.access_token,
 				'Content-Type': "application/json",
 			},
-			body: '{"item": {"@microsoft.graph.conflictBehavior": "replace", "name": "' + name + '"}}',
+			body: '{"item": {"@microsoft.graph.conflictBehavior": "rename", "name": "' + name + '"}}',
 		}, function(er, re, bo) {				// Process any errors
 			if (er) return console.log("Upload audio file session request error: ", er);
 			bo = JSON.parse(bo);
