@@ -52,7 +52,7 @@ var clientSecret = "1n3~PGlmw4xMpaz~hhmq12Na._V-Z9SZ97";
 if (process.env.clientID != undefined) clientID = process.env.clientID;	// If we are running in Heroku these should be set
 if (process.env.clientSecret != undefined) clientSecret = process.env.clientSecret;
 const scope = "offline_access files.readwrite";				// Scope of access required for OneDrive
-var callback = "https://voicevault.herokuapp.com/authcallback";		// Authentication callback varies if on heroku
+var callback = "https://voicevaultpre.herokuapp.com/authcallback";		// Authentication callback varies if on heroku
 if (PORT == undefined) callback = "https://localhost/authcallback";	// or running as localhost for testing
 accessToken = "";							// This needs to be valid to allow us to work with OneDrive
 refreshToken = "";							// To renew the access token we need this to be valid. Otherwise OndeDrive owner must re-authenticate
