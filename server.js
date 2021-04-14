@@ -82,7 +82,7 @@ app.get("/authorize", function (req, res, next) {			// When the refresh token ex
 	next();
 });
 
-app.get("/authCallback", function (req, res, next) {			// Microsoft will send the user here if we get authotization
+app.get("/authcallback", function (req, res, next) {			// Microsoft will send the user here if we get authotization
 	res.status(200).send("OneDrive authorization complete. You may close this window.");
 	console.log("OneDrive auth callback. code is "+req.query.code);
 	let payload = {
