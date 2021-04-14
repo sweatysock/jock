@@ -85,6 +85,7 @@ console.log("AUTHORIZING");
 
 app.get("/authcallback", function (req, res, next) {			// Microsoft will send the user here if we get authotization
 console.log("AUTH CALLBACK");
+console.log(req);
 	res.status(200).send("OneDrive authorization complete. You may close this window.");
 	console.log("OneDrive auth callback. code is "+req.query.code);
 	let payload = {
