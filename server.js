@@ -89,8 +89,10 @@ console.log(req);
 	if (req.query.code === undefined) {				// Authentication didn't work. Display the error
 		res.status(200).send("OneDrive authorization error. Please contact VoiceVault support with this error:<br> "+decodeURIComponent(req.query.error_description));
 		next();
+		return;
 	} else 	res.status(200).send("OneDrive authorization complete. You may close this window.");
-	console.log("OneDrive auth callback. code is "+req.query.code);
+	console.log("OneDrive auth callback. code is ", req.query.code);
+	console.log("Using secret: ", clientSecret);
 	let payload = {
 		code: req.query.code,
 		client_id: clientID,
@@ -109,12 +111,13 @@ console.log(req);
 		let results = JSON.parse(body);
 		accessToken = results.access_token;
 		refreshToken = results.refresh_token;
-		fs.writeFile("rt.txt", refreshToken, (err) => {		// Save the refresh token so it can be recovered on restarting
-			if (err)  return console.log(err);
-			console.log("rt.txt created");
-			let now = new Date();
-			saveTextFile("System/", "auth", "New authentication obtained correctly on "+now);
-		});
+		if (refreshToken !== undefined) 			// If the refresh token exists...
+			fs.writeFile("rt.txt", refreshToken, (err) => {	// Save the refresh token so it can be recovered on restarting
+				if (err)  return console.log(err);
+				console.log("rt.txt created");
+				let now = new Date();
+				saveTextFile("System/", "auth", "New authentication obtained correctly on "+now);
+			});
 	});
 	next();
 });
