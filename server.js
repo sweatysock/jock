@@ -66,6 +66,7 @@ fs.readFile("rt.txt", function (err, text) {				// Try reading the refresh token
 
 
 app.get("/authorize", function (req, res, next) {			// When the refresh token expires the OneDrive owner needs to re-authorize us here
+console.log("AUTHORIZING");
 	let url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
 	let param = {							// Parameters for OAuth2 authorization call to Microsoft
 		response_type: "code",
@@ -83,6 +84,7 @@ app.get("/authorize", function (req, res, next) {			// When the refresh token ex
 });
 
 app.get("/authcallback", function (req, res, next) {			// Microsoft will send the user here if we get authotization
+console.log("AUTH CALLBACK");
 	res.status(200).send("OneDrive authorization complete. You may close this window.");
 	console.log("OneDrive auth callback. code is "+req.query.code);
 	let payload = {
