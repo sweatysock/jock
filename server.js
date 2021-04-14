@@ -86,7 +86,10 @@ console.log("AUTHORIZING");
 app.get("/authcallback", function (req, res, next) {			// Microsoft will send the user here if we get authotization
 console.log("AUTH CALLBACK");
 console.log(req);
-	res.status(200).send("OneDrive authorization complete. You may close this window.");
+	if (req.query.code === undefined) {				// Authentication didn't work. Display the error
+		res.status(200).send("OneDrive authorization error. Please contact VoiceVault support with this error:<br> "+decodeURIComponent(req.query.error));
+		next();
+	} else 	res.status(200).send("OneDrive authorization complete. You may close this window.");
 	console.log("OneDrive auth callback. code is "+req.query.code);
 	let payload = {
 		code: req.query.code,
