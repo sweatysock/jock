@@ -47,21 +47,20 @@ const async = require('async');						// Used for asynchronous large file uploads
 
 // OAuth2 handling for OneDrive
 //
-var clientID = "1cb0b9a5-058b-4224-a31e-7da7f1d82829";			// These are default values for testing
-var clientSecret = "1n3~PGlmw4xMpaz~hhmq12Na._V-Z9SZ97";
-if (process.env.clientID != undefined) clientID = process.env.clientID;	// If we are running in Heroku these should be set
-if (process.env.clientSecret != undefined) clientSecret = process.env.clientSecret;
+//
 const scope = "offline_access files.readwrite";				// Scope of access required for OneDrive
-var callback = "https://voicevaultpre.herokuapp.com/authcallback";	// Authentication callback varies if on heroku
-if (PORT == undefined) callback = "https://localhost/authcallback";	// or running as localhost for testing
-refreshToken = "";							// We need a refreshToken to access OneDrive
+var clientID = "1cb0b9a5-058b-4224-a31e-7da7f1d82829";			// Default values for testing
+if (process.env.clientID != undefined) clientID = process.env.clientID;	// If we are running in Heroku these should be set
+var clientSecret = "1n3~PGlmw4xMpaz~hhmq12Na._V-Z9SZ97";		// Default values for testing
+if (process.env.clientSecret != undefined) clientSecret = process.env.clientSecret;
+var callback = "https://localhost/authcallback";			// Default value for testing
+if (process.env.callback != undefined) callback = process.env.callback;	// Authentication callback for our particular heroku environment
+var refreshToken = "";							// We need a refreshToken to access OneDrive
 if (process.env.token != undefined) refreshToken = process.env.token;	// If it is in a config var we are good to go
+
 let now = new Date();
 saveTextFile("System/", "launched", "voicevault started on "+now+" using recovered token.");
 
-var os = require("os");
-var hostname = os.hostname();
-console.log("HOSTNAME IS: ",hostname);
 
 app.get("/authorize", function (req, res, next) {			// When the refresh token expires the OneDrive owner needs to re-authorize us here
 console.log("AUTHORIZING");
