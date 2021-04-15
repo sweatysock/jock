@@ -104,15 +104,15 @@ console.log(req);
 		url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
 		form: payload,
 	}, function(error, response, body){				// If all goes well the response will contain the tokens
-		console.log("Microsoft authentication error code:", error);
-		console.log("Microsoft authentication results:");
-		console.log(body);
 		let results = JSON.parse(body);
 		accessToken = results.access_token;
 		refreshToken = results.refresh_token;
-		if (refreshToken === undefined) 			// If the refresh token did not get created
+		if (refreshToken === undefined) { 			// If the refresh token did not get created
+			console.log("Microsoft authentication error code:", error);
 			refreshToken = "";
-		else 	fs.writeFileSync("rt.txt", refreshToken, (err) => {	// Save the refresh token so it can be recovered on restarting
+			console.log("Authentication did not return a refresh token");
+			console.log(body);
+		} else 	fs.writeFile("rt.txt", refreshToken, (err) => {	// Save the refresh token so it can be recovered on restarting
 				if (err)  return console.log(err);
 				console.log("rt.txt created");
 				let now = new Date();
