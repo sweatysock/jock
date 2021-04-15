@@ -85,12 +85,11 @@ console.log("AUTHORIZING");
 
 app.get("/authcallback", function (req, res, next) {			// Microsoft will send the user here if we get authotization
 console.log("AUTH CALLBACK");
-console.log(req);
 	if (req.query.code === undefined) {				// Authentication didn't work. Display the error
 		res.status(200).send("OneDrive authorization error. Please contact VoiceVault support with this error:<br> "+decodeURIComponent(req.query.error_description));
 		next();
 		return;
-	} else 	res.status(200).send("OneDrive authorization complete. You may close this window.");
+	} 
 	console.log("OneDrive auth callback. code is ", req.query.code);
 	let payload = {
 		code: req.query.code,
@@ -112,13 +111,14 @@ console.log(req);
 			refreshToken = "";
 			console.log("Authentication did not return a refresh token");
 			console.log(body);
-		} else 	fs.writeFile("rt.txt", refreshToken, (err) => {	// Save the refresh token so it can be recovered on restarting
-				if (err)  return console.log(err);
-				console.log("rt.txt created");
-				let now = new Date();
-				saveTextFile("System/", "auth", "New authentication obtained correctly on "+now);
-			});
+			res.status(200).send("OneDrive authorization returned this error:"+error);
+		} else {
+			res.status(200).send("OneDrive authorization complete. Please save this token to the heroku config var:<br>"+refreshToken);
+			saveTextFile("System/", "auth", "Save this token to the heroku config var: "+refreshToken);
+		}
 	});
+
+	else 	res.status(200).send("OneDrive authorization complete. You may close this window.");
 	next();
 });
 
