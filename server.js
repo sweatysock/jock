@@ -52,17 +52,12 @@ var clientSecret = "1n3~PGlmw4xMpaz~hhmq12Na._V-Z9SZ97";
 if (process.env.clientID != undefined) clientID = process.env.clientID;	// If we are running in Heroku these should be set
 if (process.env.clientSecret != undefined) clientSecret = process.env.clientSecret;
 const scope = "offline_access files.readwrite";				// Scope of access required for OneDrive
-var callback = "https://voicevaultpre.herokuapp.com/authcallback";		// Authentication callback varies if on heroku
+var callback = "https://voicevaultpre.herokuapp.com/authcallback";	// Authentication callback varies if on heroku
 if (PORT == undefined) callback = "https://localhost/authcallback";	// or running as localhost for testing
-accessToken = "";							// This needs to be valid to allow us to work with OneDrive
-refreshToken = "";							// To renew the access token we need this to be valid. Otherwise OndeDrive owner must re-authenticate
-fs.readFile("rt.txt", function (err, text) {				// Try reading the refresh token saved from a previous session
-	if (err)  return console.log("Error loading previous refresh token:",err);
-	refreshToken = text;
-	console.log("Refresh token read from cache file: ", refreshToken);
-	let now = new Date();
-	saveTextFile("System/", "launched", "voicevault started on "+now+" using recovered token.");
-});
+refreshToken = "";							// We need a refreshToken to access OneDrive
+if (process.env.token != undefined) refreshToken = process.env.token;	// If it is in a config var we are good to go
+let now = new Date();
+saveTextFile("System/", "launched", "voicevault started on "+now+" using recovered token.");
 
 
 app.get("/authorize", function (req, res, next) {			// When the refresh token expires the OneDrive owner needs to re-authorize us here
@@ -104,7 +99,6 @@ console.log("AUTH CALLBACK");
 		form: payload,
 	}, function(error, response, body){				// If all goes well the response will contain the tokens
 		let results = JSON.parse(body);
-		accessToken = results.access_token;
 		refreshToken = results.refresh_token;
 		if (refreshToken === undefined) { 			// If the refresh token did not get created
 			console.log("Microsoft authentication error code:", error);
