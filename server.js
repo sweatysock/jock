@@ -59,6 +59,9 @@ if (process.env.token != undefined) refreshToken = process.env.token;	// If it i
 let now = new Date();
 saveTextFile("System/", "launched", "voicevault started on "+now+" using recovered token.");
 
+var os = require("os");
+var hostname = os.hostname();
+console.log("HOSTNAME IS: ",hostname);
 
 app.get("/authorize", function (req, res, next) {			// When the refresh token expires the OneDrive owner needs to re-authorize us here
 console.log("AUTHORIZING");
