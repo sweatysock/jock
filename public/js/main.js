@@ -87,6 +87,8 @@ socketIO.on('s', function (data) {					// Playing or recording has stopped
 
 socketIO.on('rp', function (data) {					// Recording progress update
 	console.log("RECORDING PROGRESS: ",data.packets);
+	let progress = document.getElementById("progress");
+	progress.innerHTML = data.packets;
 });
 
 socketIO.on('a', function (data) {					// The server needs to be re-authorized by the OneDrive owner
