@@ -117,8 +117,6 @@ console.log("AUTH CALLBACK");
 			saveTextFile("System/", "auth", "Save this token to the heroku config var: "+refreshToken);
 		}
 	});
-
-	else 	res.status(200).send("OneDrive authorization complete. You may close this window.");
 	next();
 });
 
