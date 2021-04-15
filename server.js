@@ -116,8 +116,8 @@ console.log("AUTH CALLBACK");
 			res.status(200).send("OneDrive authorization complete. Please save this token to the heroku config var:<br>"+refreshToken);
 			saveTextFile("System/", "auth", "Save this token to the heroku config var: "+refreshToken);
 		}
+		next();
 	});
-	next();
 });
 
 // OneDrive general operations
