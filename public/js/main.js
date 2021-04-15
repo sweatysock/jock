@@ -134,6 +134,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	window.addEventListener('resize', checkOrientation );
 	let nextBtn = document.getElementById("nextBtn");
 	let recBtn = document.getElementById("recBtn");
+	let recording = document.getElementById("recording");
 	let playBtn = document.getElementById("playBtn");
 	let trueBtn = document.getElementById("trueBtn");
 	let exBtn = document.getElementById("exBtn");
@@ -147,6 +148,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	let falseActive = document.getElementById("falseActive");
 	let exAudio = document.getElementById("exAudio");
 	nextBtn.onclick = function () {
+		recording.style.visibility = "hidden";			// Ensure the recording in progress button is hidden
 		socketIO.emit("Save", {					// Tell the server to save responses
 			stepFile: guides[guideStep], 			// corresponding to this step file of the guide
 			text: responseText,				// with response texts if appropriate
@@ -156,6 +158,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	};
 	recBtn.onclick = function () {
 		exAudio.pause();					// Stop example audio playing
+		recording.style.visibility = "visible";			// Make the recording in progress button visible
 		stopOff.style.visibility = "hidden";			// Enable stop button
 		nextOff.style.visibility = "hidden";			// Enable next button as recording has started
 		playOff.style.visibility = "hidden";			// Enable play button too
@@ -165,6 +168,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	playBtn.onclick = function () {
 		exAudio.pause();					// Stop example audio playing
 		stopOff.style.visibility = "hidden";			// Enable stop button
+		recording.style.visibility = "hidden";			// Ensure the recording in progress button is hidden
 		socketIO.emit("Play");					// Send command to server
 		monitor = true;
 	};
@@ -190,9 +194,11 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		exAudio.currentTime = 0;				// Reset file to start
 		exAudio.play();						// Play the audio
 		stopOff.style.visibility = "hidden";			// Enable the stop button
+		recording.style.visibility = "hidden";			// Ensure the recording in progress button is hidden
 	};
 	stopBtn.onclick = function () {					// Stop button pressed
 		exAudio.pause();					// Stop audio
+		recording.style.visibility = "hidden";			// Ensure the recording in progress button is hidden
 		stopOff.style.visibility = "visible";			// Disable stop button
 		socketIO.emit("Stop");					// Send command to server
 	};
