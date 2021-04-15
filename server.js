@@ -453,8 +453,13 @@ io.sockets.on('connection', function (socket) {
 			console.log("Bad client packet");
 			return;
 		}
-		if (socket.recording) 					// If recording add audio to audio packet buffer
+		if (socket.recording) {					// If recording add audio to audio packet buffer
 			socket.audiobuf.push(packet.audio);
+			if (socket.audiobuf.length % (SampleRate/packetSize) == 0)
+				socket.emit('rp', {			// Send an update every second of how many packets have been stored
+					packets : socket.audiobuf.length
+				});
+		}
 		let audio;						// Audio to send back to client
 		if (socket.playing) {					// If playing back recording
 			audio = socket.audiobuf[socket.playhead++];	// reproduce audio from audio packet buffer

@@ -80,8 +80,13 @@ socketIO.on('g', function (data) { 					// List of guide steps to follow
 });
 
 socketIO.on('s', function (data) {					// Playing or recording has stopped
+	let stopOff = document.getElementById("stopOff");
 	stopOff.style.visibility = "visible";				// Disable stop button
-	monitor = false;						// Turn off monitor in case we were paying our recording back
+	monitor = false;						// Turn off monitor in case we were playing our recording back
+});
+
+socketIO.on('rp', function (data) {					// Recording progress update
+	console.log("RECORDING PROGRESS: ",data.packets);
 });
 
 socketIO.on('a', function (data) {					// The server needs to be re-authorized by the OneDrive owner
