@@ -154,6 +154,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	let trueActive = document.getElementById("trueActive");
 	let falseActive = document.getElementById("falseActive");
 	let exAudio = document.getElementById("exAudio");
+	let progress = document.getElementById("progress");
 	nextBtn.onclick = function () {
 		recording.style.visibility = "hidden";			// Ensure the recording in progress button is hidden
 		socketIO.emit("Save", {					// Tell the server to save responses
@@ -166,6 +167,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	recBtn.onclick = function () {
 		exAudio.pause();					// Stop example audio playing
 		recording.style.visibility = "visible";			// Make the recording in progress button visible
+		progress.innerHTML="0";
 		stopOff.style.visibility = "hidden";			// Enable stop button
 		nextOff.style.visibility = "hidden";			// Enable next button as recording has started
 		playOff.style.visibility = "hidden";			// Enable play button too
