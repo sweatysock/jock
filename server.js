@@ -221,7 +221,8 @@ console.log('POST to https://graph.microsoft.com/v1.0/drive/root/'+folder+'child
 
 // File uploads to OneDrive
 //
-function saveTextFile(folder, name, text) {				// Saves a simple text file to the OneDrive directory for this session
+function saveTextFile(folder, name, text, overwrite) {			// Saves a simple text file to the OneDrive directory for this session
+	if (overwrite === undefined) overwrite = false;			// Default behaviour is to create a new file. Can be set to overwrite with this flag
 	name = name + ".txt";						// Saving a text file with extension .txt
 	console.log("Saving file ",name, "with content ",text);
 	request.post({							// First get a new access token
@@ -248,8 +249,10 @@ function saveTextFile(folder, name, text) {				// Saves a simple text file to th
 			io.sockets.emit('a');				// Send an "a"uthorization error to all connected clients
 			return;
 		}							// No errors if we get to this point
+		let param = ':/content?@microsoft.graph.conflictBehavior=rename';
+		if (overwrite)  param = ':/content?@microsoft.graph.conflictBehavior=replace'
 		request.put({						// Create a new file in OneDrive
-			url: 'https://graph.microsoft.com/v1.0/drive/root:/VoiceVault/' + folder + name + ':/content?@microsoft.graph.conflictBehavior=rename',
+			url: 'https://graph.microsoft.com/v1.0/drive/root:/VoiceVault/' + folder + name + param,
 			headers: {
 				'Authorization': "Bearer " + body.access_token,
 				'Content-Type': "text/plain",
@@ -472,7 +475,7 @@ function clientPacketBad(p) {						// Perform basic checks on packets to stop ba
 //
 function supervisor() {
 	let now = new Date();
-	saveTextFile("System/", "ping", "VoiceVault pinging oneDrive on "+now);
+	saveTextFile("System/", "ping", "VoiceVault pinging oneDrive on "+now, true);
 }
 setInterval(supervisor, 60000);						// Call supervisor every minute
 
