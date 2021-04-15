@@ -455,7 +455,7 @@ io.sockets.on('connection', function (socket) {
 		}
 		if (socket.recording) {					// If recording add audio to audio packet buffer
 			socket.audiobuf.push(packet.audio);
-			if (socket.audiobuf.length % (SampleRate/packetSize) == 0)
+			if (socket.audiobuf.length % (SampleRate/PacketSize) == 0)
 				socket.emit('rp', {			// Send an update every second of how many packets have been stored
 					packets : socket.audiobuf.length
 				});
