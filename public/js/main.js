@@ -89,6 +89,11 @@ socketIO.on('rp', function (data) {					// Recording progress update
 	console.log("RECORDING PROGRESS: ",data.packets);
 	let progress = document.getElementById("progress");
 	progress.innerHTML = data.packets;
+	if (data.packets > 3) {
+		stopOff.style.visibility = "hidden";			// Enable stop button
+		nextOff.style.visibility = "hidden";			// Enable next button as recording has started
+		playOff.style.visibility = "hidden";			// Enable play button too
+	}
 });
 
 socketIO.on('a', function (data) {					// The server needs to be re-authorized by the OneDrive owner
@@ -168,9 +173,6 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		exAudio.pause();					// Stop example audio playing
 		recording.style.visibility = "visible";			// Make the recording in progress button visible
 		progress.innerHTML="0";
-		stopOff.style.visibility = "hidden";			// Enable stop button
-		nextOff.style.visibility = "hidden";			// Enable next button as recording has started
-		playOff.style.visibility = "hidden";			// Enable play button too
 		socketIO.emit("Record");				// Send command to server
 		monitor = false;					// Turn off monitor while recording
 	};
