@@ -88,11 +88,16 @@ socketIO.on('s', function (data) {					// Playing or recording has stopped
 socketIO.on('rp', function (data) {					// Recording progress update
 	console.log("RECORDING PROGRESS: ",data.packets);
 	let progress = document.getElementById("progress");
+	let nextOff = document.getElementById("nextOff");
+	let stopOff = document.getElementById("stopOff");
+	let playOff = document.getElementById("playOff");
+	let exOff = document.getElementById("exOff");
 	progress.innerHTML = data.packets;
 	if (data.packets > 3) {
 		stopOff.style.visibility = "hidden";			// Enable stop button
 		nextOff.style.visibility = "hidden";			// Enable next button as recording has started
 		playOff.style.visibility = "hidden";			// Enable play button too
+		if (exLoaded) exOff.style.visibility = "hidden";	// If an example audio was loaded enable the button again
 	}
 });
 
@@ -140,6 +145,7 @@ function updateScale(value) {
 	nextOff.style.visibility = "hidden";				// Enable the next button as a value has been input
 }
 
+var exLoaded = false;
 document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic behaviour to UI elements
 	tracef("Starting V1.1");
 	checkOrientation();
@@ -172,6 +178,10 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	recBtn.onclick = function () {
 		exAudio.pause();					// Stop example audio playing
 		recording.style.visibility = "visible";			// Make the recording in progress button visible
+		exOff.style.visibility = "visible";			// Disable example button
+		stopOff.style.visibility = "visible";			// Disable stop button
+		playOff.style.visibility = "visible";			// Disable play button
+		nextOff.style.visibility = "visible";			// disable next button
 		progress.innerHTML="0";
 		socketIO.emit("Record");				// Send command to server
 		monitor = false;					// Turn off monitor while recording
@@ -197,6 +207,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	};
 	exAudio.onloadeddata = function () {				// When example audio is loaded enable the button
 		exOff.style.visibility = "hidden";
+		exLoaded = true;
 	};
 	exAudio.onended = function () {					// When example audio has finished playing
 		stopOff.style.visibility = "visible";
@@ -269,6 +280,7 @@ console.log(filename," ",guideType);
 				let filename = "/guides/"+guide.substring(0,guide.lastIndexOf("-")+1) + "Ex.m4a";
 console.log("loading example audio ",filename);
 				exAudio.setAttribute("src",filename);
+				exLoaded = false;
 				break;
 			case "S":
 				ex.style.visibility = "hidden";
