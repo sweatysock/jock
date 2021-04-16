@@ -168,6 +168,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	let progress = document.getElementById("progress");
 	nextBtn.onclick = function () {
 		recording.style.visibility = "hidden";			// Ensure the recording in progress button is hidden
+		monitor = false;
 		socketIO.emit("Save", {					// Tell the server to save responses
 			stepFile: guides[guideStep], 			// corresponding to this step file of the guide
 			text: responseText,				// with response texts if appropriate
@@ -217,12 +218,14 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		exAudio.play();						// Play the audio
 		stopOff.style.visibility = "hidden";			// Enable the stop button
 		recording.style.visibility = "hidden";			// Ensure the recording in progress button is hidden
+		socketIO.emit("Stop");					// Send command to server
 	};
 	stopBtn.onclick = function () {					// Stop button pressed
 		exAudio.pause();					// Stop audio
 		recording.style.visibility = "hidden";			// Ensure the recording in progress button is hidden
 		stopOff.style.visibility = "visible";			// Disable stop button
 		socketIO.emit("Stop");					// Send command to server
+		monitor = false;
 	};
 });
 
