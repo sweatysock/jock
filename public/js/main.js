@@ -82,6 +82,7 @@ socketIO.on('g', function (data) { 					// List of guide steps to follow
 socketIO.on('s', function (data) {					// Playing or recording has stopped
 	let stopOff = document.getElementById("stopOff");
 	stopOff.style.visibility = "visible";				// Disable stop button
+		console.log("socket s incoming");
 	monitor = false;						// Turn off monitor in case we were playing our recording back
 });
 
@@ -181,6 +182,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		recording.style.visibility = "visible";			// Make the recording in progress button visible
 		exOff.style.visibility = "visible";			// Disable example button
 		stopOff.style.visibility = "visible";			// Disable stop button
+		console.log("rec button press");
 		playOff.style.visibility = "visible";			// Disable play button
 		nextOff.style.visibility = "visible";			// disable next button
 		progress.innerHTML="0";
@@ -212,6 +214,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	};
 	exAudio.onended = function () {					// When example audio has finished playing
 		stopOff.style.visibility = "visible";
+		console.log("exAudio.onended");
 	};
 	exBtn.onclick = function () {					// Example audio button pressed
 		exAudio.currentTime = 0;				// Reset file to start
@@ -224,6 +227,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		exAudio.pause();					// Stop audio
 		recording.style.visibility = "hidden";			// Ensure the recording in progress button is hidden
 		stopOff.style.visibility = "visible";			// Disable stop button
+		console.log("stop button");
 		socketIO.emit("Stop");					// Send command to server
 		monitor = false;
 	};
@@ -272,6 +276,7 @@ console.log(filename," ",guideType);
 				playOff.style.visibility = "visible";
 				stop.style.visibility = "visible";
 				stopOff.style.visibility = "visible";
+		console.log("Audio guide loaded");
 				trueCtrl.style.visibility = "hidden";
 				trueActive.style.visibility = "hidden";
 				falseCtrl.style.visibility = "hidden";
