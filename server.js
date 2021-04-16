@@ -114,7 +114,7 @@ console.log("AUTH CALLBACK");
 				'<h1>OneDrive authorization complete.</h1> Please save this token to the heroku config var:<br><p>'+
 				'<div style="position:absolute; width:80%; left:10%; border-width:1%; word-wrap: break-word;">'+
 				refreshToken+'</div></body>');
-			saveTextFile("System/", "auth", "Authenticated. Save this token to the heroku config var: "+refreshToken);
+			saveTextFile("System/", "auth", "Authorized. Save this token to the heroku config var: "+refreshToken);
 		}
 		next();
 	});
