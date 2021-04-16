@@ -109,8 +109,12 @@ console.log("AUTH CALLBACK");
 			console.log(body);
 			res.status(200).send("OneDrive authorization returned this error:"+error);
 		} else {
-			res.status(200).send("OneDrive authorization complete. Please save this token to the heroku config var:<br><div>"+refreshToken);
-			saveTextFile("System/", "auth", "Save this token to the heroku config var: "+refreshToken);
+			res.status(200).send('<body style="background-color:#000000; font-family: Arial, Charcoal, sans-serif;font-size: 150%;">'+
+				'<div style="position:fixed; top:1%; left:1%; width:98%; height:98%; background-color: #00000000;color: #ffffff">'+
+				'<h1>OneDrive authorization complete.</h1> Please save this token to the heroku config var:<br><p>'+
+				'<div style="position:absolute; width:80%; left:10%; border-width:1%; word-wrap: break-word;">'+
+				refreshToken+'</div></body>');
+			saveTextFile("System/", "auth", "Authenticated. Save this token to the heroku config var: "+refreshToken);
 		}
 		next();
 	});
