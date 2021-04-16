@@ -572,33 +572,33 @@ function magicKernel( x ) {						// This thing is crazy cool
 // 
 var currentMonitor=0;
 var monitors = ["none","monitor","monitor2"];
-document.addEventListener('DOMContentLoaded', function(event){
-	let monitorBtn=document.getElementById('monitorBtn');
-	monitorBtn.onclick = function () {
-		if (monitors[currentMonitor] != "none") {
-			let mon = document.getElementById(monitors[currentMonitor])
-			mon.style.visibility = "hidden";
-			mon.parentNode.style.visibility = "hidden";
-		}
-		currentMonitor++;
-		if (currentMonitor == monitors.length) currentMonitor = 0;
-		if (monitors[currentMonitor] != "none") {
-			let mon = document.getElementById(monitors[currentMonitor])
-			mon.style.visibility = "visible";
-			mon.parentNode.style.visibility = "visible";
-		}
-	};
-	let micBtn=document.getElementById('micBtn');
-	micBtn.onclick = function () {
-		trace2("Mic mute button pressed");
-		micIn.muted = !micIn.muted;
-	};
-	let outBtn=document.getElementById('outBtn');
-	outBtn.onclick = function () {
-		trace("Output button pressed");
-		monitor = !monitor;
-	};
-});
+//document.addEventListener('DOMContentLoaded', function(event){
+//	let monitorBtn=document.getElementById('monitorBtn');
+//	monitorBtn.onclick = function () {
+//		if (monitors[currentMonitor] != "none") {
+//			let mon = document.getElementById(monitors[currentMonitor])
+//			mon.style.visibility = "hidden";
+//			mon.parentNode.style.visibility = "hidden";
+//		}
+//		currentMonitor++;
+//		if (currentMonitor == monitors.length) currentMonitor = 0;
+//		if (monitors[currentMonitor] != "none") {
+//			let mon = document.getElementById(monitors[currentMonitor])
+//			mon.style.visibility = "visible";
+//			mon.parentNode.style.visibility = "visible";
+//		}
+//	};
+//	let micBtn=document.getElementById('micBtn');
+//	micBtn.onclick = function () {
+//		trace2("Mic mute button pressed");
+//		micIn.muted = !micIn.muted;
+//	};
+//	let outBtn=document.getElementById('outBtn');
+//	outBtn.onclick = function () {
+//		trace("Output button pressed");
+//		monitor = !monitor;
+//	};
+//});
 var pauseTracing = false;						// Traces are on by default
 
 // Reporting code. Accumulators, interval timer and report generator
