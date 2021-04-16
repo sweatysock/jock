@@ -428,9 +428,10 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('Stop', function () {					// Command from client to stop playing or recording their audio
 		console.log("Stop ", socket.clientID);
+		if (socket.recording || socket.playing) 		// If we were actually playing or recording something
+			socket.emit('s');				// then send stop confirm to client
 		socket.recording = false;
 		socket.playing = false;
-		socket.emit('s');					// Send stop confirm to client
 	});
 
 	socket.on('Save', function (packet) {				// Command from client to save recorded audio
